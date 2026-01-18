@@ -23,10 +23,12 @@ class DependencyInjectionContainer {
   public addMany(names: string[], services: Record<string, unknown>): void {
     Logger.instance.info(`Registering multiple services: ${names.join(", ")}`);
 
-    names.forEach(name => {
+    names.forEach((name) => {
       const serviceInstance = services[name] ?? null;
       if (!serviceInstance) {
-        throw new Error(`Service with name ${name} not found in provided services`);
+        throw new Error(
+          `Service with name ${name} not found in provided services`,
+        );
       }
 
       this.add(name, serviceInstance);
@@ -39,6 +41,10 @@ class DependencyInjectionContainer {
     }
 
     return this.services.get(name) as T;
+  }
+
+  public getTotalServices(): number {
+    return this.services.size;
   }
 }
 

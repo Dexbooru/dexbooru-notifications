@@ -5,7 +5,7 @@ type RouteHandler = (req: BunRequest) => Response | Promise<Response>;
 export default class RequestHandler {
   constructor(private routes: Map<string, RouteHandler>) {}
 
-  public handle(req: Request, server: Server): Response | Promise<Response> {
+  public handle(req: Request, server: Server<undefined>): Response | Promise<Response> {
     const url = new URL(req.url);
     if (url.pathname === "/events") {
       if (server.upgrade(req)) {

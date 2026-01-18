@@ -12,6 +12,7 @@ import { Connection as RabbitMqConnection } from "rabbitmq-client";
 import Logger from "./logger";
 import RequestHandler from "./request-handler";
 import WebSocketHandler from "./ws-handler";
+import mongoose from "mongoose";
 
 class Application {
   private name: string;
@@ -23,6 +24,18 @@ class Application {
 
   constructor(name: string) {
     this.name = name;
+  }
+
+  private registerMongodbConnection(): void {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI environment variable is not set");
+    }
+
+    mongoose.connect(process.env.MONGODB_URI).then(() => {
+      Logger.instance.info("Connected to MongoDB");
+    }).catch((err) => {
+      Logger.instance.error("Failed to connect to MongoDB", err);
+    });
   }
 
   private registerRepositories(): void {
@@ -148,6 +161,9 @@ class Application {
     if (isNaN(parsedPort)) {
       throw new Error("Port must be a valid number from 0 to 65535");
     }
+
+    // establish mongodb connection
+    this.registerMongodbConnection();
 
     // perform dependency registration
     this.registerDependencies();
