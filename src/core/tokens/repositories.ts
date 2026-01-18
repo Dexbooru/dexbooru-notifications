@@ -1,5 +1,3 @@
-enum RepositoryTokens {
-  CommentCreationNotificationRepository = "CommentCreationNotificationRepository",
-}
+enum RepositoryTokens {}
 
 export default RepositoryTokens;
