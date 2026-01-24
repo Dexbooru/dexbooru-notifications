@@ -1,6 +1,7 @@
 import DependencyInjectionContainer from "../core/dependency-injection-container";
 import RepositoryTokens from "../core/tokens/repositories";
 import type { UserSessionRepository } from "../repositories";
+import type { TUserSession } from "../models/authentication/session";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { Types } from "mongoose";
@@ -68,15 +69,19 @@ class AuthenticationService {
     return newUserSession;
   }
 
-  public async validateSession(token: string): Promise<boolean> {
+  public async validateSession(token: string): Promise<TUserSession | null> {
     const session = await this.userSessionRepository.findOne({ token });
     if (!session) {
-      return false;
+      return null;
     }
     
     const now = new Date();
 
-    return session.expiresAt > now;
+    if (session.expiresAt <= now) {
+        return null;
+    }
+
+    return session;
   }
 }
 

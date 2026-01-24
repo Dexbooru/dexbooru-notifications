@@ -13,6 +13,7 @@ import Logger from "./logger";
 import RequestHandler from "./request-handler";
 import WebSocketHandler from "./ws-handler";
 import mongoose from "mongoose";
+import type { TGlobalEventData } from "../services/events";
 
 // Define types for module exports
 type Constructor<T = unknown> = new () => T;
@@ -35,11 +36,14 @@ class Application {
       throw new Error("MONGODB_URI environment variable is not set");
     }
 
-    mongoose.connect(process.env.MONGODB_URI).then(() => {
-      Logger.instance.info("Connected to MongoDB");
-    }).catch((err) => {
-      Logger.instance.error("Failed to connect to MongoDB", err);
-    });
+    mongoose
+      .connect(process.env.MONGODB_URI)
+      .then(() => {
+        Logger.instance.info("Connected to MongoDB");
+      })
+      .catch((err) => {
+        Logger.instance.error("Failed to connect to MongoDB", err);
+      });
   }
 
   private registerRepositories(): void {
@@ -98,15 +102,13 @@ class Application {
         typeof ConsumerClass === "function" &&
         ConsumerClass.prototype instanceof BaseConsumer
       ) {
-        // Safe because we checked the prototype
         const Ctor = ConsumerClass as new () => BaseConsumer;
         const instance = new Ctor();
-        
+
         Logger.instance.info(
           `Registering consumer ${ConsumerClass.name} on queue: ${instance.queueName}`,
         );
-        
-        // Ensure rabbitConnection is defined before using it
+
         if (this.rabbitConnection) {
           instance.start(this.rabbitConnection).catch((err) => {
             Logger.instance.error(
@@ -132,7 +134,6 @@ class Application {
     });
 
     controllerInstances.forEach((instance) => {
-      // Get all property names including inherited ones
       const prototype = Object.getPrototypeOf(instance);
       const classMethods = Object.getOwnPropertyNames(prototype);
 
@@ -151,9 +152,10 @@ class Application {
           return;
         }
 
-        // Safe access to the method
-        const method = (instance as unknown as Record<string, unknown>)[methodName];
-        
+        const method = (instance as unknown as Record<string, unknown>)[
+          methodName
+        ];
+
         if (typeof method !== "function") {
           return;
         }
@@ -163,31 +165,33 @@ class Application {
         const middlewares = instance.getMiddlewares(methodName);
 
         this.routes.set(routeKey, async (req: BunRequest) => {
-          const boundMethod = method.bind(instance) as (req: Request) => Promise<Response>;
+          const boundMethod = method.bind(instance) as (
+            req: Request,
+          ) => Promise<Response>;
 
           if (middlewares.length > 0) {
-             // Link middlewares
-             for (let i = 0; i < middlewares.length - 1; i++) {
-               const current = middlewares[i];
-               const next = middlewares[i+1];
-               if (current && next) current.setNext(next);
-             }
-             
-             // Link last middleware to controller handler
-             const lastMiddleware = middlewares[middlewares.length - 1];
-             if (lastMiddleware) {
-                lastMiddleware.setHandler(boundMethod);
-             }
+            // Link middlewares
+            for (let i = 0; i < middlewares.length - 1; i++) {
+              const current = middlewares[i];
+              const next = middlewares[i + 1];
+              if (current && next) current.setNext(next);
+            }
 
-             // Execute first middleware
-             const firstMiddleware = middlewares[0];
-             if (firstMiddleware) {
-                const response = await firstMiddleware.run(req);
-                Logger.instance.info(
-                  `${req.method} ${new URL(req.url).pathname} ${response.status}`,
-                );
-                return response;
-             }
+            // Link last middleware to controller handler
+            const lastMiddleware = middlewares[middlewares.length - 1];
+            if (lastMiddleware) {
+              lastMiddleware.setHandler(boundMethod);
+            }
+
+            // Execute first middleware
+            const firstMiddleware = middlewares[0];
+            if (firstMiddleware) {
+              const response = await firstMiddleware.run(req);
+              Logger.instance.info(
+                `${req.method} ${new URL(req.url).pathname} ${response.status}`,
+              );
+              return response;
+            }
           }
 
           const response = await boundMethod(req);
@@ -200,26 +204,20 @@ class Application {
     });
   }
 
-
-  public listen(port: string): Bun.Server<undefined> {
+  public listen(port: string): Bun.Server<TGlobalEventData> {
     const parsedPort = parseInt(port, 10);
     if (isNaN(parsedPort)) {
       throw new Error("Port must be a valid number from 0 to 65535");
     }
 
-    // establish mongodb connection
     this.registerMongodbConnection();
-
-    // perform dependency registration
     this.registerDependencies();
-
-    // register controllers
     this.registerControllers();
 
     const requestHandler = new RequestHandler(this.routes);
     const websocketHandler = new WebSocketHandler();
 
-    const server = Bun.serve({
+    const server = Bun.serve<TGlobalEventData>({
       development: {
         hmr: true,
       },

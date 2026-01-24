@@ -53,32 +53,33 @@ describe("AuthenticationService", () => {
   });
 
   describe("validateSession", () => {
-    test("should return false if session does not exist", async () => {
+    test("should return null if session does not exist", async () => {
       mockFindOne.mockResolvedValue(null);
       const authService = new AuthenticationService();
-      const isValid = await authService.validateSession("non-existent-token");
-      expect(isValid).toBe(false);
+      const session = await authService.validateSession("non-existent-token");
+      expect(session).toBeNull();
       expect(mockFindOne).toHaveBeenCalledWith({ token: "non-existent-token" });
     });
 
-    test("should return false if session is expired", async () => {
+    test("should return null if session is expired", async () => {
       const expiredDate = new Date();
       expiredDate.setDate(expiredDate.getDate() - 1);
       mockFindOne.mockResolvedValue({ expiresAt: expiredDate });
       
       const authService = new AuthenticationService();
-      const isValid = await authService.validateSession("expired-token");
-      expect(isValid).toBe(false);
+      const session = await authService.validateSession("expired-token");
+      expect(session).toBeNull();
     });
 
-    test("should return true if session is valid", async () => {
+    test("should return session if session is valid", async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
-      mockFindOne.mockResolvedValue({ expiresAt: futureDate });
+      const mockSession = { expiresAt: futureDate, userId: "some-id" };
+      mockFindOne.mockResolvedValue(mockSession);
       
       const authService = new AuthenticationService();
-      const isValid = await authService.validateSession("valid-token");
-      expect(isValid).toBe(true);
+      const session = await authService.validateSession("valid-token");
+      expect(session).toEqual(mockSession);
     });
   });
 });

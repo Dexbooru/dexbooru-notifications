@@ -3,6 +3,7 @@ import AuthenticationController from "../../../src/api/controllers/authenticatio
 import { AuthenticationService } from "../../../src/services";
 import ServiceTokens from "../../../src/core/tokens/services";
 import { parseCookies } from "../../../src/core/middleware/cookie-parser";
+import type { AppRequest } from "../../../src/core/interfaces/request";
 
 // Mock AuthenticationService
 const mockExchangeJwtForSession = mock();
@@ -103,5 +104,27 @@ describe("AuthenticationController", () => {
 
     const response = await controller.handlePost(req);
     expect(response.status).toBe(400);
+  });
+
+  test("should return 200 and session data for GET request", async () => {
+    const controller = new AuthenticationController();
+    const mockSession = {
+      userId: "user-123",
+      issuedAt: new Date("2025-12-31"),
+    };
+
+    const req = new Request("http://localhost/api/auth", {
+      method: "GET"
+    }) as AppRequest;
+    
+    req.context = { session: mockSession };
+
+    const response = await controller.handleGet(req);
+    const body = await response.json() as { data: { authenticated: boolean, userId: string, issuedAt: string } };
+
+    expect(response.status).toBe(200);
+    expect(body.data.authenticated).toBe(true);
+    expect(body.data.userId).toBe("user-123");
+    expect(body.data.issuedAt).toBe(mockSession.issuedAt.toISOString());
   });
 });

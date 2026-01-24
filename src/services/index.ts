@@ -1,4 +1,5 @@
 import HealthCheckService from "./health-check";
 import AuthenticationService from "./authentication";
+import EventService from "./events";
 
-export { HealthCheckService, AuthenticationService };
+export { HealthCheckService, AuthenticationService, EventService };

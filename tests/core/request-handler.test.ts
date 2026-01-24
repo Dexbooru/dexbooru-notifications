@@ -1,10 +1,11 @@
 import { describe, expect, test, mock } from "bun:test";
 import RequestHandler from "../../src/core/request-handler";
 import type { Server } from "bun";
+import type { TGlobalEventData } from "../../src/services/events";
 
 const mockServer = {
   upgrade: mock(() => false),
-} as unknown as Server<undefined>;
+} as unknown as Server<TGlobalEventData>;
 
 describe("RequestHandler", () => {
   test("should return 200 for valid route", async () => {

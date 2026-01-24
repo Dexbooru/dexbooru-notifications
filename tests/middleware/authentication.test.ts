@@ -3,6 +3,7 @@ import AuthenticationMiddleware from "../../src/core/middleware/authentication";
 import { AuthenticationService } from "../../src/services";
 import DependencyInjectionContainer from "../../src/core/dependency-injection-container";
 import ServiceTokens from "../../src/core/tokens/services";
+import type { AppRequest } from "../../src/core/interfaces/request";
 
 // Mock AuthenticationService
 const mockValidateSession = mock();
@@ -20,8 +21,9 @@ describe("Authentication Middleware", () => {
     );
   });
 
-  test("should call next if session is valid", async () => {
-    mockValidateSession.mockResolvedValue(true);
+  test("should call next if session is valid and attach session to context", async () => {
+    const mockSession = { userId: "user-123" };
+    mockValidateSession.mockResolvedValue(mockSession);
     
     const middleware = new AuthenticationMiddleware();
     const req = new Request("http://localhost", {
@@ -38,10 +40,14 @@ describe("Authentication Middleware", () => {
     expect(response.status).toBe(200);
     expect(await response.text()).toBe("OK");
     expect(mockValidateSession).toHaveBeenCalledWith("valid-token");
+    
+    // Check context
+    expect((req as AppRequest).context).toBeDefined();
+    expect((req as AppRequest).context?.session).toEqual(mockSession);
   });
 
   test("should return 401 if session is invalid", async () => {
-    mockValidateSession.mockResolvedValue(false);
+    mockValidateSession.mockResolvedValue(null);
     
     const middleware = new AuthenticationMiddleware();
     const req = new Request("http://localhost", {
