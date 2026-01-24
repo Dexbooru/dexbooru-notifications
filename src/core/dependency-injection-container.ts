@@ -43,6 +43,10 @@ class DependencyInjectionContainer {
     return this.services.get(name) as T;
   }
 
+  public clear(): void {
+    this.services.clear();
+  }
+
   public getTotalServices(): number {
     return this.services.size;
   }

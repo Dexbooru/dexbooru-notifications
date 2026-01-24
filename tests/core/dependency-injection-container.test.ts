@@ -15,12 +15,14 @@ class MockServiceB {}
 class MockServiceC {}
 
 describe("Dependency Injection Container", () => {
-  let mockServices = {} as Record<string, unknown>;
+  const mockServices: Record<string, any> = {
+    MockServiceA: new MockServiceA(),
+    MockServiceB: new MockServiceB(),
+    MockServiceC: new MockServiceC(),
+  };
 
   beforeEach(() => {
-    mockServices["MockServiceA"] = new MockServiceA();
-    mockServices["MockServiceB"] = new MockServiceB();
-    mockServices["MockServiceC"] = new MockServiceC();
+    DependencyInjectionContainer.instance.clear();
   });
 
   test("should register a static instance", () => {

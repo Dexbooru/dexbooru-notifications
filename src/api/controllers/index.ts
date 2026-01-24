@@ -1,3 +1,4 @@
 import HealthController from "./health-check";
+import AuthenticationController from "./authentication";
 
-export { HealthController };
+export { HealthController, AuthenticationController };

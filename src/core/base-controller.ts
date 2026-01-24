@@ -1,7 +1,11 @@
 import type { IController } from "./interfaces/controller";
+import type BaseMiddleware from "./base-middleware";
+import type { AppRequest } from "./interfaces/request";
 
 abstract class BaseController {
   private route: string;
+  protected middlewares: Map<string, BaseMiddleware[]> = new Map();
+
   public static readonly HTTP_METHODS = [
     "GET",
     "POST",
@@ -19,10 +23,26 @@ abstract class BaseController {
     return this.route;
   }
 
+  protected registerMiddleware(
+    methodName: string,
+    middlewares: BaseMiddleware[],
+  ) {
+    this.middlewares.set(methodName, middlewares);
+  }
+
+  public getMiddlewares(methodName: string): BaseMiddleware[] {
+    return this.middlewares.get(methodName) || [];
+  }
+
+  protected getParsedBody<T>(request: Request): T {
+    return (request as AppRequest).parsedBody as T;
+  }
+
   public ok(
     message: string,
     status: number = 200,
-    data: unknown = null
+    data: unknown = null,
+    optionalHeaders: Record<string, string> = {},
   ): Response {
     const okBody = {
       status,
@@ -32,14 +52,14 @@ abstract class BaseController {
 
     return new Response(JSON.stringify(okBody), {
       status,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...optionalHeaders },
     });
   }
 
   public error(
     message: string,
     status: number = 500,
-    data: unknown = null
+    data: unknown = null,
   ): Response {
     const errorBody = {
       status,

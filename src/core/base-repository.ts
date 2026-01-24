@@ -1,6 +1,6 @@
-import { Model } from "mongoose";
-import type { UpdateQuery, QueryFilter } from "mongoose";
+import { Model, type UpdateQuery, type QueryFilter } from "mongoose";
 import type { IRepository } from "./interfaces/repository";
+import Logger from "./logger";
 
 abstract class BaseRepository<T> implements IRepository<T> {
   protected repositoryName: string;
@@ -13,10 +13,12 @@ abstract class BaseRepository<T> implements IRepository<T> {
 
   public async create(data: Partial<T>): Promise<T> {
     try {
-      const created = await this.model.create(data as any);
+      const created = await (
+        this.model.create as (doc: Partial<T>) => Promise<any>
+      )(data);
       return created as unknown as T;
     } catch (error) {
-      console.error(`Error in ${this.repositoryName}.create:`, error);
+      Logger.instance.error(`Error in ${this.repositoryName}.create:`, error);
       throw error;
     }
   }
@@ -25,7 +27,16 @@ abstract class BaseRepository<T> implements IRepository<T> {
     try {
       return await this.model.find(filter).exec();
     } catch (error) {
-      console.error(`Error in ${this.repositoryName}.findAll:`, error);
+      Logger.instance.error(`Error in ${this.repositoryName}.findAll:`, error);
+      throw error;
+    }
+  }
+
+  public async findOne(filter: QueryFilter<T> = {}): Promise<T | null> {
+    try {
+      return await this.model.findOne(filter).exec();
+    } catch (error) {
+      Logger.instance.error(`Error in ${this.repositoryName}.findOne:`, error);
       throw error;
     }
   }
@@ -34,7 +45,7 @@ abstract class BaseRepository<T> implements IRepository<T> {
     try {
       return await this.model.findById(id).exec();
     } catch (error) {
-      console.error(`Error in ${this.repositoryName}.findById:`, error);
+      Logger.instance.error(`Error in ${this.repositoryName}.findById:`, error);
       throw error;
     }
   }
@@ -43,7 +54,7 @@ abstract class BaseRepository<T> implements IRepository<T> {
     try {
       return await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
     } catch (error) {
-      console.error(`Error in ${this.repositoryName}.update:`, error);
+      Logger.instance.error(`Error in ${this.repositoryName}.update:`, error);
       throw error;
     }
   }
@@ -53,7 +64,7 @@ abstract class BaseRepository<T> implements IRepository<T> {
       const result = await this.model.findByIdAndDelete(id).exec();
       return !!result;
     } catch (error) {
-      console.error(`Error in ${this.repositoryName}.delete:`, error);
+      Logger.instance.error(`Error in ${this.repositoryName}.delete:`, error);
       throw error;
     }
   }
