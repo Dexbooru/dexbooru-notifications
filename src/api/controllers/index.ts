@@ -1,4 +1,5 @@
-import HealthController from "./health-check";
 import AuthenticationController from "./authentication";
+import HealthCheckController from "./health-check";
+import NotificationSettingController from "./notification-settings";
 
-export { HealthController, AuthenticationController };
+export { AuthenticationController, HealthCheckController, NotificationSettingController };
