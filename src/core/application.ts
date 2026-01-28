@@ -14,6 +14,7 @@ import RequestHandler from "./request-handler";
 import WebSocketHandler from "./ws-handler";
 import mongoose from "mongoose";
 import type { TGlobalEventData } from "../services/events";
+import type WebSocketService from "../services/websocket";
 
 // Define types for module exports
 type Constructor<T = unknown> = new () => T;
@@ -225,6 +226,12 @@ class Application {
       fetch: requestHandler.handle.bind(requestHandler),
       websocket: websocketHandler,
     });
+
+    const container = DependencyInjectionContainer.instance;
+    const webSocketService = container.getService<WebSocketService>(
+      ServiceTokens.WebSocketService,
+    );
+    webSocketService.setServer(server);
 
     Logger.instance.info(
       `${this.name} started and listening on port ${parsedPort}`,

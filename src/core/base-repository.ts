@@ -23,6 +23,19 @@ abstract class BaseRepository<T> implements IRepository<T> {
     }
   }
 
+  public async insertMany(data: Partial<T>[]): Promise<T[]> {
+    try {
+      const created = await this.model.insertMany(data);
+      return created as unknown as T[];
+    } catch (error) {
+      Logger.instance.error(
+        `Error in ${this.repositoryName}.insertMany:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
   public async findAll(filter: QueryFilter<T> = {}): Promise<T[]> {
     try {
       return await this.model.find(filter).exec();

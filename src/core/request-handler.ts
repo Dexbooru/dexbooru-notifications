@@ -23,11 +23,13 @@ export default class RequestHandler {
     server: Server<TGlobalEventData>,
   ): Promise<Response | undefined> {
     const url = new URL(req.url);
+
     if (url.pathname === "/events") {
       parseCookies(req);
       const token = (req as BunRequest).cookies.get(
         AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY,
       );
+
       if (!token) {
         return new Response("Unauthorized", { status: 401 });
       }
@@ -37,9 +39,11 @@ export default class RequestHandler {
         return new Response("Unauthorized", { status: 401 });
       }
 
-      if (server.upgrade(req, {
-        data: eventData,
-      })) {
+      if (
+        server.upgrade(req, {
+          data: eventData,
+        })
+      ) {
         return undefined;
       }
       return new Response("Upgrade failed", { status: 500 });

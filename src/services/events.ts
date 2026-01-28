@@ -20,12 +20,30 @@ class EventService {
     const session = await this.authenticationService.validateSession(token);
     if (!session) return null;
 
-    const eventChannelName = `events-${session.userId}`;
+    const eventChannelName = this.getChannelName(session.userId.toString());
 
     return {
       eventChannelName,
       userId: session.userId.toString(),
     };
+  }
+
+  public getChannelName(userId: string): string {
+    return `events-${userId}`;
+  }
+
+  public computeChannelKey(payload: unknown): string | null {
+    // Basic heuristics to find target user ID
+    if (typeof payload === "object" && payload !== null) {
+      const p = payload as Record<string, unknown>;
+      // Check common fields for target user
+      if (typeof p.userId === "string") return this.getChannelName(p.userId);
+      if (typeof p.receiverUserId === "string")
+        return this.getChannelName(p.receiverUserId);
+      if (typeof p.receiverId === "string")
+        return this.getChannelName(p.receiverId);
+    }
+    return null;
   }
 }
 

@@ -4,7 +4,7 @@ import type { NotificationSettingRepository } from "../repositories";
 import type { TNotificationSetting } from "../models/settings/notification-setting";
 
 class NotificationSettingService {
-  private repository: NotificationSettingRepository;
+  private readonly repository: NotificationSettingRepository;
 
   constructor() {
     this.repository =

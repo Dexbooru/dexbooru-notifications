@@ -24,7 +24,10 @@ mock.module("rabbitmq-client", () => {
 // Mock DependencyInjectionContainer
 const mockAddMany = mock();
 const mockAdd = mock();
-const mockGetService = mock(() => ({}));
+const mockSetServer = mock();
+const mockGetService = mock(() => ({
+  setServer: mockSetServer
+}));
 const mockContainerInstance = {
   addMany: mockAddMany,
   add: mockAdd,
@@ -79,7 +82,10 @@ mock.module("../../src/core/tokens/repositories", () => ({
   default: { TEST_REPO: "TestRepository" }
 }));
 mock.module("../../src/core/tokens/services", () => ({
-  default: { TEST_SERVICE: "TestService" }
+  default: { 
+    TEST_SERVICE: "TestService",
+    WebSocketService: "WebSocketService"
+  }
 }));
 
 describe("Application", () => {

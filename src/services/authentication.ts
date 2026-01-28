@@ -12,12 +12,13 @@ type TJwtPayload = jwt.JwtPayload & {
 
 class AuthenticationService {
   public static readonly DEXBOORU_WEBAPP_COOKIE_KEY = "token";
-  public static readonly DEXBOORU_NOTIFICATIONS_COOKIE_KEY = "dexbooru-notifications-session";
+  public static readonly DEXBOORU_NOTIFICATIONS_COOKIE_KEY =
+    "dexbooru-notifications-session";
 
   private static readonly SESSION_ID_SIZE = 32;
   private static readonly SESSION_EXPIRATION_DAYS = 7;
 
-  private userSessionRepository: UserSessionRepository;
+  private readonly userSessionRepository: UserSessionRepository;
 
   constructor() {
     this.userSessionRepository =
@@ -74,11 +75,11 @@ class AuthenticationService {
     if (!session) {
       return null;
     }
-    
+
     const now = new Date();
 
     if (session.expiresAt <= now) {
-        return null;
+      return null;
     }
 
     return session;

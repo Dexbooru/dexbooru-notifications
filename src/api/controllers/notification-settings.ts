@@ -23,7 +23,7 @@ const updateSettingsSchema = createSettingsSchema.partial();
 
 class NotificationSettingController extends BaseController {
   public name: string = controllerName;
-  private service: NotificationSettingService;
+  private readonly service: NotificationSettingService;
 
   constructor() {
     super("/settings");

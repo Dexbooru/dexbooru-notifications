@@ -8,7 +8,7 @@ const controllerName = "HealthController";
 
 class HealthController extends BaseController implements IController {
   public name: string = controllerName;
-  private healthCheckService: HealthCheckService;
+  private readonly healthCheckService: HealthCheckService;
 
   constructor() {
     super("/health");

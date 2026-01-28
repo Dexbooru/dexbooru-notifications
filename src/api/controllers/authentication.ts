@@ -13,7 +13,7 @@ const controllerName = "AuthenticationController";
 class AuthenticationController extends BaseController implements IController {
   public name: string = controllerName;
 
-  private authenticationService: AuthenticationService;
+  private readonly authenticationService: AuthenticationService;
 
   constructor() {
     super("/auth");
