@@ -43,4 +43,41 @@ describe("EventService", () => {
     expect(result).toBeNull();
     expect(mockValidateSession).toHaveBeenCalledWith(token);
   });
+
+  test("resolveRecipientChannels should prefer postAuthorId and parentCommentAuthorId", () => {
+    const eventService = new EventService();
+    const payload = {
+      postAuthorId: "author-1",
+      parentCommentAuthorId: "parent-author-1",
+      userId: "some-other-user",
+    };
+
+    const channels = eventService.resolveRecipientChannels(payload);
+
+    expect(channels).toContain("events-author-1");
+    expect(channels).toContain("events-parent-author-1");
+    expect(channels.length).toBe(2);
+  });
+
+  test("resolveRecipientChannels should fallback to computeChannelKey fields", () => {
+    const eventService = new EventService();
+    const payload = {
+      receiverUserId: "receiver-1",
+    };
+
+    const channels = eventService.resolveRecipientChannels(payload);
+
+    expect(channels).toEqual(["events-receiver-1"]);
+  });
+
+  test("resolveRecipientChannels should return empty array if no recipients found", () => {
+    const eventService = new EventService();
+    const payload = {
+      unknownField: "value",
+    };
+
+    const channels = eventService.resolveRecipientChannels(payload);
+
+    expect(channels).toEqual([]);
+  });
 });

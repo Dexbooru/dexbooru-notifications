@@ -5,6 +5,7 @@ import NotificationSettingService from "./notification-settings";
 import WebSocketService from "./websocket";
 import FriendInviteService from "./friend-invites";
 import NewPostCommentService from "./new-post-comment";
+import NewPostLikeNotificationService from "./new-post-like";
 
 export {
   HealthCheckService,
@@ -14,4 +15,5 @@ export {
   WebSocketService,
   FriendInviteService,
   NewPostCommentService,
+  NewPostLikeNotificationService,
 };

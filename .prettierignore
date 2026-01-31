@@ -4,3 +4,4 @@ bun.lock
 .env
 .gemini
 docker-compose.yml
+Dockerfile.app

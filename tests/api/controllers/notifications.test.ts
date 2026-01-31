@@ -14,6 +14,12 @@ const mockNewPostCommentService = {
   getUserComments: mockGetUserComments,
 };
 
+// Mock NewPostLikeNotificationService
+const mockGetUserLikes = mock();
+const mockNewPostLikeNotificationService = {
+  getUserLikes: mockGetUserLikes,
+};
+
 // Mock DependencyInjectionContainer
 const mockGetService = mock((token: string) => {
   if (token === ServiceTokens.FriendInviteService) {
@@ -21,6 +27,9 @@ const mockGetService = mock((token: string) => {
   }
   if (token === ServiceTokens.NewPostCommentService) {
     return mockNewPostCommentService;
+  }
+  if (token === ServiceTokens.NewPostLikeNotificationService) {
+    return mockNewPostLikeNotificationService;
   }
   return {};
 });
@@ -42,6 +51,7 @@ describe("NotificationsController", () => {
   beforeEach(() => {
     mockGetUserInvites.mockClear();
     mockGetUserComments.mockClear();
+    mockGetUserLikes.mockClear();
     mockGetService.mockClear();
   });
 
@@ -56,9 +66,11 @@ describe("NotificationsController", () => {
     };
     const mockInvites = [{ id: "invite-1" }];
     const mockComments = [{ id: "comment-1" }];
+    const mockLikes = [{ id: "like-1" }];
 
     mockGetUserInvites.mockResolvedValue(mockInvites);
     mockGetUserComments.mockResolvedValue(mockComments);
+    mockGetUserLikes.mockResolvedValue(mockLikes);
 
     const req = new Request(
       "http://localhost/api/notifications?page=1&limit=20&read=false",
@@ -73,7 +85,9 @@ describe("NotificationsController", () => {
     expect(response.status).toBe(200);
     expect(body.data.newFriendInvites).toEqual(mockInvites);
     expect(body.data.newPostComments).toEqual(mockComments);
+    expect(body.data.newPostLikes).toEqual(mockLikes);
     expect(mockGetUserInvites).toHaveBeenCalledWith("user-123", false, 1, 20);
     expect(mockGetUserComments).toHaveBeenCalledWith("user-123", false, 1, 20);
+    expect(mockGetUserLikes).toHaveBeenCalledWith("user-123", false, 1, 20);
   });
 });

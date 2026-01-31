@@ -16,7 +16,7 @@ describe("GlobalEventConsumer", () => {
   let mockWebSocketService: WebSocketService;
   let mockEventService: EventService;
   let mockPublish: ReturnType<typeof mock>;
-  let mockComputeChannelKey: ReturnType<typeof mock>;
+  let mockResolveRecipientChannels: ReturnType<typeof mock>;
 
   beforeEach(() => {
     DependencyInjectionContainer.instance.clear();
@@ -26,12 +26,12 @@ describe("GlobalEventConsumer", () => {
       publish: mockPublish,
     } as unknown as WebSocketService;
 
-    mockComputeChannelKey = mock((payload: any) => {
-      if (payload.userId) return `events-${payload.userId}`;
-      return null;
+    mockResolveRecipientChannels = mock((payload: any) => {
+      if (payload.userId) return [`events-${payload.userId}`];
+      return [];
     });
     mockEventService = {
-      computeChannelKey: mockComputeChannelKey,
+      resolveRecipientChannels: mockResolveRecipientChannels,
     } as unknown as EventService;
 
     DependencyInjectionContainer.instance.add(
@@ -46,7 +46,7 @@ describe("GlobalEventConsumer", () => {
     consumer = new TestableGlobalEventConsumer();
   });
 
-  test("should publish message to websocket service if channel computed", async () => {
+  test("should publish message to websocket service for each resolved channel", async () => {
     const payload = {
       userId: "user-1",
       some: "data",
@@ -54,34 +54,37 @@ describe("GlobalEventConsumer", () => {
 
     await consumer.testOnBatch([payload]);
 
-    expect(mockComputeChannelKey).toHaveBeenCalledWith(payload);
+    expect(mockResolveRecipientChannels).toHaveBeenCalledWith(payload);
     expect(mockPublish).toHaveBeenCalledWith(
       "events-user-1",
       JSON.stringify(payload),
     );
   });
 
-  test("should skip message if channel key not found", async () => {
-    const payload = {
-      // missing userId
-      some: "data",
-    };
+  test("should publish to multiple channels if resolved", async () => {
+    mockResolveRecipientChannels.mockReturnValue(["channel-1", "channel-2"]);
+    const payload = { test: "data" };
 
     await consumer.testOnBatch([payload]);
 
-    expect(mockComputeChannelKey).toHaveBeenCalledWith(payload);
-    expect(mockPublish).not.toHaveBeenCalled();
+    expect(mockPublish).toHaveBeenCalledTimes(2);
+    expect(mockPublish).toHaveBeenCalledWith(
+      "channel-1",
+      JSON.stringify(payload),
+    );
+    expect(mockPublish).toHaveBeenCalledWith(
+      "channel-2",
+      JSON.stringify(payload),
+    );
   });
 
-  test("should ignore invalid payloads (not objects)", async () => {
-    // BaseConsumer should filter this out because schema is z.record(z.unknown())
-    // But here we are calling onBatch directly via testOnBatch, bypassing BaseConsumer validation.
-    // So onBatch receives it.
-    // Wait, onBatch expects TGlobalEventPayload[] which is Record<string, unknown>[].
-    // If I pass non-object to onBatch in test, it might crash or TS error.
-    // But at runtime (js), it passes.
-    // GlobalEventConsumer uses `payload` in `for (const payload of messages)`.
-    // Let's rely on BaseConsumer validation for structure tests.
-    // Here we assume valid structure reached onBatch.
+  test("should skip message if no channels resolved", async () => {
+    mockResolveRecipientChannels.mockReturnValue([]);
+    const payload = { some: "data" };
+
+    await consumer.testOnBatch([payload]);
+
+    expect(mockResolveRecipientChannels).toHaveBeenCalledWith(payload);
+    expect(mockPublish).not.toHaveBeenCalled();
   });
 });

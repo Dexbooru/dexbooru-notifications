@@ -6,6 +6,7 @@ enum ServiceTokens {
   WebSocketService = "WebSocketService",
   FriendInviteService = "FriendInviteService",
   NewPostCommentService = "NewPostCommentService",
+  NewPostLikeNotificationService = "NewPostLikeNotificationService",
 }
 
 export default ServiceTokens;

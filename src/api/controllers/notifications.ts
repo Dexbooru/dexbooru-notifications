@@ -7,6 +7,7 @@ import DependencyInjectionContainer from "../../core/dependency-injection-contai
 import ServiceTokens from "../../core/tokens/services";
 import type FriendInviteService from "../../services/friend-invites";
 import type NewPostCommentService from "../../services/new-post-comment";
+import type NewPostLikeNotificationService from "../../services/new-post-like";
 import type { TUserSession } from "../../models/authentication/session";
 import { z } from "zod";
 
@@ -26,6 +27,7 @@ type NotificationQuery = z.infer<typeof NotificationQuerySchema>;
 export default class NotificationsController extends BaseController {
   private friendInviteService: FriendInviteService;
   private newPostCommentService: NewPostCommentService;
+  private newPostLikeNotificationService: NewPostLikeNotificationService;
 
   constructor() {
     super("/notifications");
@@ -37,6 +39,10 @@ export default class NotificationsController extends BaseController {
       DependencyInjectionContainer.instance.getService<NewPostCommentService>(
         ServiceTokens.NewPostCommentService,
       );
+    this.newPostLikeNotificationService =
+      DependencyInjectionContainer.instance.getService<NewPostLikeNotificationService>(
+        ServiceTokens.NewPostLikeNotificationService,
+      );
     this.registerMiddleware("handleGet", [
       new AuthenticationMiddleware(),
       new UrlQueryValidator(NotificationQuerySchema),
@@ -47,24 +53,33 @@ export default class NotificationsController extends BaseController {
     const session = (req as AppRequest).context!.session as TUserSession;
     const { page, limit, read } = this.getParsedQuery<NotificationQuery>(req);
 
-    const [newFriendInvites, newPostComments] = await Promise.all([
-      this.friendInviteService.getUserInvites(
-        session.userId.toString(),
-        read,
-        page,
-        limit,
-      ),
-      this.newPostCommentService.getUserComments(
-        session.userId.toString(),
-        read,
-        page,
-        limit,
-      ),
-    ]);
+    const [newFriendInvites, newPostComments, newPostLikes] = await Promise.all(
+      [
+        this.friendInviteService.getUserInvites(
+          session.userId.toString(),
+          read,
+          page,
+          limit,
+        ),
+        this.newPostCommentService.getUserComments(
+          session.userId.toString(),
+          read,
+          page,
+          limit,
+        ),
+        this.newPostLikeNotificationService.getUserLikes(
+          session.userId.toString(),
+          read,
+          page,
+          limit,
+        ),
+      ],
+    );
 
     const combinedNotifications = {
       newFriendInvites,
       newPostComments,
+      newPostLikes,
     };
 
     return this.ok(
