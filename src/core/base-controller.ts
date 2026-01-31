@@ -38,6 +38,10 @@ abstract class BaseController {
     return (request as AppRequest).parsedBody as T;
   }
 
+  protected getParsedQuery<T>(request: Request): T {
+    return (request as AppRequest).parsedQuery as T;
+  }
+
   public ok(
     message: string,
     status: number = 200,
