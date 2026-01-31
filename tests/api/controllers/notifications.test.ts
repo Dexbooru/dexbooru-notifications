@@ -30,8 +30,8 @@ mock.module("../../../src/core/dependency-injection-container", () => {
     default: {
       instance: {
         getService: mockGetService,
-      }
-    }
+      },
+    },
   };
 });
 
@@ -60,13 +60,15 @@ describe("NotificationsController", () => {
     mockGetUserInvites.mockResolvedValue(mockInvites);
     mockGetUserComments.mockResolvedValue(mockComments);
 
-    const req = new Request("http://localhost/api/notifications?page=1&limit=20&read=false") as AppRequest;
-    
+    const req = new Request(
+      "http://localhost/api/notifications?page=1&limit=20&read=false",
+    ) as AppRequest;
+
     req.context = { session: mockSession };
     req.parsedQuery = { page: 1, limit: 20, read: false };
 
     const response = await controller.handleGet(req);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     expect(response.status).toBe(200);
     expect(body.data.newFriendInvites).toEqual(mockInvites);

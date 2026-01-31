@@ -7,6 +7,7 @@ import DependencyInjectionContainer from "../../core/dependency-injection-contai
 import ServiceTokens from "../../core/tokens/services";
 import type FriendInviteService from "../../services/friend-invites";
 import type NewPostCommentService from "../../services/new-post-comment";
+import type { TUserSession } from "../../models/authentication/session";
 import { z } from "zod";
 
 const NotificationQuerySchema = PaginationSchema.extend({
@@ -43,13 +44,18 @@ export default class NotificationsController extends BaseController {
   }
 
   public override async handleGet(req: Request): Promise<Response> {
-    const { session } = (req as AppRequest).context!;
+    const session = (req as AppRequest).context!.session as TUserSession;
     const { page, limit, read } = this.getParsedQuery<NotificationQuery>(req);
 
     const [newFriendInvites, newPostComments] = await Promise.all([
-      this.friendInviteService.getUserInvites(session.userId, read, page, limit),
+      this.friendInviteService.getUserInvites(
+        session.userId.toString(),
+        read,
+        page,
+        limit,
+      ),
       this.newPostCommentService.getUserComments(
-        session.userId,
+        session.userId.toString(),
         read,
         page,
         limit,

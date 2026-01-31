@@ -8,7 +8,7 @@ class HealthCheckService {
 
   constructor() {
     this.healthCheckRabbitConnection = new RabbitMqConnection(
-      process.env.RABBITMQ_URL
+      process.env.RABBITMQ_URL,
     );
   }
 

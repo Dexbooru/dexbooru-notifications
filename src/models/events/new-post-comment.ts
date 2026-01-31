@@ -40,10 +40,10 @@ const dtoToModel = (dto: TNewPostCommentDto): Partial<TNewPostComment> => {
     commentContent: dto.commentContent,
     parentCommentId: dto.parentCommentId
       ? new Types.UUID(dto.parentCommentId)
-      : null,
+      : undefined,
     parentCommentAuthorId: dto.parentCommentAuthorId
       ? new Types.UUID(dto.parentCommentAuthorId)
-      : null,
+      : undefined,
     wasRead: dto.wasRead,
   };
 };

@@ -20,8 +20,8 @@ mock.module("../../src/core/logger", () => {
         info: mock(),
         error: mock(),
         warn: mock(),
-      }
-    }
+      },
+    },
   };
 });
 
@@ -33,14 +33,14 @@ describe("NewPostCommentConsumer", () => {
   beforeEach(() => {
     DependencyInjectionContainer.instance.clear();
     mockProcessBatch = mock(() => Promise.resolve());
-    
+
     mockService = {
       processBatch: mockProcessBatch,
     } as unknown as NewPostCommentService;
 
     DependencyInjectionContainer.instance.add(
       ServiceTokens.NewPostCommentService,
-      mockService
+      mockService,
     );
 
     consumer = new TestableNewPostCommentConsumer();
@@ -54,7 +54,7 @@ describe("NewPostCommentConsumer", () => {
         commentAuthorId: "00000000-0000-0000-0000-000000000003",
         commentContent: "Nice post!",
         wasRead: false,
-      }
+      },
     ];
     await consumer.testOnBatch(messages);
     expect(mockProcessBatch).toHaveBeenCalledWith(messages);
@@ -70,9 +70,11 @@ describe("NewPostCommentConsumer", () => {
         commentAuthorId: "00000000-0000-0000-0000-000000000003",
         commentContent: "Nice post!",
         wasRead: false,
-      }
+      },
     ];
 
-    await expect(consumer.testOnBatch(messages)).rejects.toThrow("Batch processing failed");
+    await expect(consumer.testOnBatch(messages)).rejects.toThrow(
+      "Batch processing failed",
+    );
   });
 });

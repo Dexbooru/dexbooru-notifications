@@ -16,7 +16,7 @@ class FriendInviteRepository extends BaseRepository<TFriendInvite> {
     limit: number,
   ): Promise<TFriendInvite[]> {
     try {
-      const filter: Record<string, any> = {
+      const filter: Record<string, unknown> = {
         receiverUserId: receiverId,
       };
 

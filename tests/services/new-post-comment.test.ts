@@ -2,7 +2,10 @@ import { describe, test, expect, mock, beforeEach, afterEach } from "bun:test";
 import NewPostCommentService from "../../src/services/new-post-comment";
 import DependencyInjectionContainer from "../../src/core/dependency-injection-container";
 import RepositoryTokens from "../../src/core/tokens/repositories";
-import type { TNewPostCommentDto } from "../../src/models/events/new-post-comment";
+import type {
+  TNewPostCommentDto,
+  TNewPostComment,
+} from "../../src/models/events/new-post-comment";
 
 // Mock Repository
 const mockInsertMany = mock();
@@ -24,8 +27,8 @@ mock.module("../../src/core/logger", () => {
         warn: mockWarn,
         info: mockInfo,
         error: mockError,
-      }
-    }
+      },
+    },
   };
 });
 
@@ -49,7 +52,7 @@ describe("NewPostCommentService", () => {
     DependencyInjectionContainer.instance.clear();
     DependencyInjectionContainer.instance.add(
       RepositoryTokens.NewPostCommentRepository,
-      mockRepository
+      mockRepository,
     );
     service = new NewPostCommentService();
   });
@@ -75,7 +78,7 @@ describe("NewPostCommentService", () => {
         parentCommentId: "00000000-0000-0000-0000-000000000001",
         parentCommentAuthorId: "00000000-0000-0000-0000-000000000003",
         wasRead: false,
-      }
+      },
     ];
 
     mockInsertMany.mockResolvedValue([]);
@@ -84,7 +87,10 @@ describe("NewPostCommentService", () => {
     await service.processBatch(payload);
 
     expect(mockInsertMany).toHaveBeenCalled();
-    const args = mockInsertMany.mock.calls[0][0];
+    const calls = mockInsertMany.mock.calls;
+    if (!calls || !calls[0]) throw new Error("no calls");
+    const args = calls[0][0];
+    if (!args) throw new Error("args is undefined");
     expect(args).toEqual(payload);
     expect(mockWarn).not.toHaveBeenCalled();
   });
@@ -96,8 +102,8 @@ describe("NewPostCommentService", () => {
         postAuthorId: "2",
         commentAuthorId: "3",
         commentContent: "test",
-        wasRead: false
-      } as any
+        wasRead: false,
+      } as any,
     ];
 
     // Simulate dtoToModel returning null for the item
@@ -114,13 +120,18 @@ describe("NewPostCommentService", () => {
     const wasRead = false;
     const page = 1;
     const limit = 20;
-    const mockComments = [{ id: "comment-1" }];
+    const mockComments = [{ id: "comment-1" }] as unknown as TNewPostComment[];
 
     mockFindByRecipientId.mockResolvedValue(mockComments);
 
     const result = await service.getUserComments(userId, wasRead, page, limit);
 
     expect(result).toBe(mockComments);
-    expect(mockFindByRecipientId).toHaveBeenCalledWith(userId, wasRead, page, limit);
+    expect(mockFindByRecipientId).toHaveBeenCalledWith(
+      userId,
+      wasRead,
+      page,
+      limit,
+    );
   });
 });

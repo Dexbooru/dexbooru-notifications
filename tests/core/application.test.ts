@@ -1,7 +1,20 @@
-import { describe, expect, test, mock, beforeEach, afterEach, spyOn } from "bun:test";
+import {
+  describe,
+  expect,
+  test,
+  mock,
+  beforeEach,
+  afterEach,
+  spyOn,
+} from "bun:test";
 import Application from "../../src/core/application";
 import mongoose from "mongoose";
-import { MockConsumer, MockController, TestRepository, TestService } from "../helpers/mocks";
+import {
+  MockConsumer,
+  MockController,
+  TestRepository,
+  TestService,
+} from "../helpers/mocks";
 
 // Mock Mongoose
 mock.module("mongoose", () => ({
@@ -17,7 +30,7 @@ mock.module("rabbitmq-client", () => {
   return {
     Connection: class {
       on = mockRabbitOn;
-    }
+    },
   };
 });
 
@@ -26,7 +39,7 @@ const mockAddMany = mock();
 const mockAdd = mock();
 const mockSetServer = mock();
 const mockGetService = mock(() => ({
-  setServer: mockSetServer
+  setServer: mockSetServer,
 }));
 const mockContainerInstance = {
   addMany: mockAddMany,
@@ -36,8 +49,8 @@ const mockContainerInstance = {
 mock.module("../../src/core/dependency-injection-container", () => {
   return {
     default: {
-      instance: mockContainerInstance
-    }
+      instance: mockContainerInstance,
+    },
   };
 });
 
@@ -50,8 +63,8 @@ mock.module("../../src/core/logger", () => {
       instance: {
         info: mockLoggerInfo,
         error: mockLoggerError,
-      }
-    }
+      },
+    },
   };
 });
 
@@ -79,10 +92,10 @@ mock.module("../../src/api/controllers/index.ts", () => ({
 
 // Mock Tokens
 mock.module("../../src/core/tokens/repositories", () => ({
-  default: { TEST_REPO: "TestRepository" }
+  default: { TEST_REPO: "TestRepository" },
 }));
 mock.module("../../src/core/tokens/services", () => ({
-  default: { 
+  default: {
     TEST_SERVICE: "TestService",
     WebSocketService: "WebSocketService",
     HealthCheckService: "HealthCheckService",
@@ -91,7 +104,7 @@ mock.module("../../src/core/tokens/services", () => ({
     NotificationSettingService: "NotificationSettingService",
     FriendInviteService: "FriendInviteService",
     NewPostCommentService: "NewPostCommentService",
-  }
+  },
 }));
 
 describe("Application", () => {
@@ -101,7 +114,7 @@ describe("Application", () => {
     process.env = { ...ORIGINAL_ENV };
     process.env.MONGODB_URI = "mongodb://localhost:27017/test";
     process.env.RABBITMQ_URL = "amqp://localhost";
-    
+
     // Reset mocks
     mockAddMany.mockClear();
     mockRabbitOn.mockClear();
@@ -124,61 +137,77 @@ describe("Application", () => {
   test("should throw error if MONGODB_URI is not set", () => {
     delete process.env.MONGODB_URI;
     const app = new Application("TestApp");
-    expect(() => app.listen("3000")).toThrow("MONGODB_URI environment variable is not set");
+    expect(() => app.listen("3000")).toThrow(
+      "MONGODB_URI environment variable is not set",
+    );
   });
 
   test("should throw error if RABBITMQ_URL is not set", () => {
     delete process.env.RABBITMQ_URL;
     const app = new Application("TestApp");
-    expect(() => app.listen("3000")).toThrow("RABBITMQ_URL environment variable is not set");
+    expect(() => app.listen("3000")).toThrow(
+      "RABBITMQ_URL environment variable is not set",
+    );
   });
 
   test("should throw error if port is invalid", () => {
     const app = new Application("TestApp");
-    expect(() => app.listen("invalid")).toThrow("Port must be a valid number from 0 to 65535");
+    expect(() => app.listen("invalid")).toThrow(
+      "Port must be a valid number from 0 to 65535",
+    );
   });
 
   test("should connect to MongoDB on listen", () => {
     const app = new Application("TestApp");
-    
+
     // Mock Bun.serve to avoid actually starting a server
-    spyOn(Bun, "serve").mockImplementation(() => ({
-      stop: () => {},
-    } as any));
+    spyOn(Bun, "serve").mockImplementation(
+      () =>
+        ({
+          stop: () => {},
+        }) as any,
+    );
 
     app.listen("3000");
-    expect(mongoose.connect).toHaveBeenCalledWith("mongodb://localhost:27017/test");
+    expect(mongoose.connect).toHaveBeenCalledWith(
+      "mongodb://localhost:27017/test",
+    );
   });
 
   test("should register dependencies on listen", () => {
     const app = new Application("TestApp");
-    spyOn(Bun, "serve").mockImplementation(() => ({ stop: () => {} } as any));
+    spyOn(Bun, "serve").mockImplementation(() => ({ stop: () => {} }) as any);
 
     app.listen("3000");
 
     // Repositories and Services should be registered
     expect(mockAddMany).toHaveBeenCalledTimes(2);
-    
+
     // Check if our mocks were loaded
     const calls = mockAddMany.mock.calls;
-    const tokens = calls.flatMap(c => c[0]);
+    const tokens = calls.flatMap((c) => c[0]);
     expect(tokens).toContain("TestRepository");
     expect(tokens).toContain("TestService");
   });
 
   test("should register rabbitmq connection on listen", () => {
     const app = new Application("TestApp");
-    spyOn(Bun, "serve").mockImplementation(() => ({ stop: () => {} } as any));
+    spyOn(Bun, "serve").mockImplementation(() => ({ stop: () => {} }) as any);
 
     app.listen("3000");
 
     expect(mockRabbitOn).toHaveBeenCalledWith("error", expect.any(Function));
-    expect(mockRabbitOn).toHaveBeenCalledWith("connection", expect.any(Function));
+    expect(mockRabbitOn).toHaveBeenCalledWith(
+      "connection",
+      expect.any(Function),
+    );
   });
 
   test("should register controllers and start server", () => {
     const app = new Application("TestApp");
-    const mockServe = spyOn(Bun, "serve").mockImplementation(() => ({ stop: () => {} } as any));
+    const mockServe = spyOn(Bun, "serve").mockImplementation(
+      () => ({ stop: () => {} }) as any,
+    );
 
     app.listen("3000");
 

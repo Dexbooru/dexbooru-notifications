@@ -50,19 +50,27 @@ describe("FriendInviteRepository", () => {
 
     mockExec.mockResolvedValue(mockResult);
 
-    const result = await repo.findByReceiverId(receiverId, wasRead, page, limit);
+    const result = await repo.findByReceiverId(
+      receiverId,
+      wasRead,
+      page,
+      limit,
+    );
 
     expect(result).toBe(mockResult as any);
-    
+
     // Check filter
-    expect(mockFind).toHaveBeenCalledWith({ receiverUserId: receiverId, wasRead: wasRead });
-    
+    expect(mockFind).toHaveBeenCalledWith({
+      receiverUserId: receiverId,
+      wasRead: wasRead,
+    });
+
     // Check sort
     expect(mockSort).toHaveBeenCalledWith({ createdAt: -1 });
-    
+
     // Check skip (page 2, limit 10 -> skip 10)
     expect(mockSkip).toHaveBeenCalledWith(10);
-    
+
     // Check limit
     expect(mockLimit).toHaveBeenCalledWith(10);
   });

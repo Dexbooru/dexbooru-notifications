@@ -5,18 +5,24 @@ import type { AsyncMessage } from "rabbitmq-client";
 
 // Mock implementation of BaseConsumer
 class TestConsumer extends BaseConsumer {
-  public mockOnBatch = mock(() => Promise.resolve());
+  public mockOnBatch = mock((_msgs: unknown[]) => Promise.resolve());
 
   protected async onBatch(messages: unknown[]): Promise<void> {
     await this.mockOnBatch(messages);
   }
-  
+
   public async testHandleCallback(msg: Partial<AsyncMessage>) {
-      return (this as unknown as { handleConsumerCallback: (msg: Partial<AsyncMessage>) => Promise<void> }).handleConsumerCallback(msg);
+    return (
+      this as unknown as {
+        handleConsumerCallback: (msg: Partial<AsyncMessage>) => Promise<void>;
+      }
+    ).handleConsumerCallback(msg);
   }
 
   public getConsumerConfig() {
-      return (this as unknown as { buildConsumerConfig: () => any }).buildConsumerConfig();
+    return (
+      this as unknown as { buildConsumerConfig: () => any }
+    ).buildConsumerConfig();
   }
 }
 
@@ -30,7 +36,7 @@ describe("BaseConsumer", () => {
     Logger.instance.warn = mockLoggerWarn;
     mockLoggerError.mockClear();
     mockLoggerWarn.mockClear();
-    
+
     // Set small batch for easy testing
     consumer = new TestConsumer("test-queue", 2, 100);
   });
@@ -49,11 +55,11 @@ describe("BaseConsumer", () => {
 
   test("should call onBatch when timer expires", async () => {
     const msg1: Partial<AsyncMessage> = { body: JSON.stringify({ id: 1 }) };
-    
+
     const p1 = consumer.testHandleCallback(msg1);
 
     // Wait for timer (maxWaitTime is 100)
-    await new Promise(r => setTimeout(r, 150));
+    await new Promise((r) => setTimeout(r, 150));
 
     await p1;
 
@@ -63,7 +69,7 @@ describe("BaseConsumer", () => {
   test("should rethrow error and reject all promises if onBatch fails", async () => {
     const error = new Error("Batch failed");
     consumer.mockOnBatch.mockRejectedValue(error);
-    
+
     const msg1: Partial<AsyncMessage> = { body: JSON.stringify({ id: 1 }) };
     const msg2: Partial<AsyncMessage> = { body: JSON.stringify({ id: 2 }) };
 
@@ -71,7 +77,7 @@ describe("BaseConsumer", () => {
     const p2 = consumer.testHandleCallback(msg2);
 
     await expect(Promise.all([p1, p2])).rejects.toThrow("Batch failed");
-    
+
     expect(mockLoggerError).toHaveBeenCalled();
   });
 
@@ -83,9 +89,15 @@ describe("BaseConsumer", () => {
   });
 
   test("should include queue bindings if routing key provided", () => {
-      const routingConsumer = new TestConsumer("q", 1, 100, undefined, "my.routing.key");
-      const config = routingConsumer.getConsumerConfig();
-      expect(config.queueBindings).toBeDefined();
-      expect(config.queueBindings[0].routingKey).toBe("my.routing.key");
+    const routingConsumer = new TestConsumer(
+      "q",
+      1,
+      100,
+      undefined,
+      "my.routing.key",
+    );
+    const config = routingConsumer.getConsumerConfig();
+    expect(config.queueBindings).toBeDefined();
+    expect(config.queueBindings[0].routingKey).toBe("my.routing.key");
   });
 });

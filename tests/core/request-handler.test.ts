@@ -12,9 +12,9 @@ describe("RequestHandler", () => {
     const mockHandler = mock(() => new Response("OK"));
     const routes = new Map();
     routes.set("GET:/test", mockHandler);
-    
+
     const handler = new RequestHandler(routes);
-    
+
     const req = new Request("http://localhost/test", { method: "GET" });
     const res = await handler.handle(req, mockServer);
     expect(res!.status).toBe(200);
@@ -23,7 +23,7 @@ describe("RequestHandler", () => {
   test("should return 404 for unknown path", async () => {
     const routes = new Map();
     const handler = new RequestHandler(routes);
-    
+
     const req = new Request("http://localhost/unknown", { method: "GET" });
     const res = await handler.handle(req, mockServer);
     expect(res!.status).toBe(404);
@@ -33,12 +33,12 @@ describe("RequestHandler", () => {
     const mockHandler = mock(() => new Response("OK"));
     const routes = new Map();
     routes.set("GET:/test", mockHandler);
-    
+
     const handler = new RequestHandler(routes);
-    
+
     const req = new Request("http://localhost/test", { method: "POST" });
     const res = await handler.handle(req, mockServer);
-    
+
     // Currently this will fail (it returns 404)
     expect(res!.status).toBe(405);
     expect(await res!.text()).toBe("Method Not Allowed");

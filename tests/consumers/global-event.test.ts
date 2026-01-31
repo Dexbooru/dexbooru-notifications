@@ -20,27 +20,27 @@ describe("GlobalEventConsumer", () => {
 
   beforeEach(() => {
     DependencyInjectionContainer.instance.clear();
-    
+
     mockPublish = mock(() => {});
     mockWebSocketService = {
       publish: mockPublish,
     } as unknown as WebSocketService;
 
     mockComputeChannelKey = mock((payload: any) => {
-        if (payload.userId) return `events-${payload.userId}`;
-        return null;
+      if (payload.userId) return `events-${payload.userId}`;
+      return null;
     });
     mockEventService = {
-        computeChannelKey: mockComputeChannelKey,
+      computeChannelKey: mockComputeChannelKey,
     } as unknown as EventService;
 
     DependencyInjectionContainer.instance.add(
       ServiceTokens.WebSocketService,
-      mockWebSocketService
+      mockWebSocketService,
     );
     DependencyInjectionContainer.instance.add(
       ServiceTokens.EventService,
-      mockEventService
+      mockEventService,
     );
 
     consumer = new TestableGlobalEventConsumer();
@@ -55,7 +55,10 @@ describe("GlobalEventConsumer", () => {
     await consumer.testOnBatch([payload]);
 
     expect(mockComputeChannelKey).toHaveBeenCalledWith(payload);
-    expect(mockPublish).toHaveBeenCalledWith("events-user-1", JSON.stringify(payload));
+    expect(mockPublish).toHaveBeenCalledWith(
+      "events-user-1",
+      JSON.stringify(payload),
+    );
   });
 
   test("should skip message if channel key not found", async () => {
@@ -69,17 +72,16 @@ describe("GlobalEventConsumer", () => {
     expect(mockComputeChannelKey).toHaveBeenCalledWith(payload);
     expect(mockPublish).not.toHaveBeenCalled();
   });
-  
+
   test("should ignore invalid payloads (not objects)", async () => {
-      // BaseConsumer should filter this out because schema is z.record(z.unknown())
-      // But here we are calling onBatch directly via testOnBatch, bypassing BaseConsumer validation.
-      // So onBatch receives it.
-      // Wait, onBatch expects TGlobalEventPayload[] which is Record<string, unknown>[].
-      // If I pass non-object to onBatch in test, it might crash or TS error.
-      // But at runtime (js), it passes.
-      // GlobalEventConsumer uses `payload` in `for (const payload of messages)`.
-      
-      // Let's rely on BaseConsumer validation for structure tests.
-      // Here we assume valid structure reached onBatch.
+    // BaseConsumer should filter this out because schema is z.record(z.unknown())
+    // But here we are calling onBatch directly via testOnBatch, bypassing BaseConsumer validation.
+    // So onBatch receives it.
+    // Wait, onBatch expects TGlobalEventPayload[] which is Record<string, unknown>[].
+    // If I pass non-object to onBatch in test, it might crash or TS error.
+    // But at runtime (js), it passes.
+    // GlobalEventConsumer uses `payload` in `for (const payload of messages)`.
+    // Let's rely on BaseConsumer validation for structure tests.
+    // Here we assume valid structure reached onBatch.
   });
 });

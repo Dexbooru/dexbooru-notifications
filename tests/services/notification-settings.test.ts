@@ -22,16 +22,21 @@ describe("NotificationSettingService", () => {
     mockUpdateByUserId.mockClear();
     mockDeleteByUserId.mockClear();
 
-    DependencyInjectionContainer.instance.add(RepositoryTokens.NotificationSettingRepository, mockRepo);
+    DependencyInjectionContainer.instance.add(
+      RepositoryTokens.NotificationSettingRepository,
+      mockRepo,
+    );
   });
 
   const validSettingsData = {
     receiveRealTimeCommentNotifications: true,
     receiveRealTimePostNotifications: true,
     receiveRealTimeCollectionNotifications: true,
+    receiveRealTimeFriendInviteNotifications: true,
     receiveEmailCommentNotifications: true,
     receiveEmailPostNotifications: true,
     receiveEmailCollectionNotifications: true,
+    receiveEmailFriendInviteNotifications: true,
   };
 
   const userId = "550e8400-e29b-41d4-a716-446655440000";
@@ -44,16 +49,20 @@ describe("NotificationSettingService", () => {
       const service = new NotificationSettingService();
       const result = await service.createSettings(userId, validSettingsData);
 
-      expect(result).toEqual({ ...validSettingsData, userId });
+      expect(result).toEqual({ ...validSettingsData, userId } as any);
       expect(mockFindByUserId).toHaveBeenCalledWith(userId);
-      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ ...validSettingsData, userId }));
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ ...validSettingsData, userId }),
+      );
     });
 
     test("should throw error if settings already exist", async () => {
       mockFindByUserId.mockResolvedValue({ ...validSettingsData, userId });
 
       const service = new NotificationSettingService();
-      expect(service.createSettings(userId, validSettingsData)).rejects.toThrow("Settings already exist for this user");
+      expect(service.createSettings(userId, validSettingsData)).rejects.toThrow(
+        "Settings already exist for this user",
+      );
       expect(mockCreate).not.toHaveBeenCalled();
     });
   });
@@ -65,7 +74,7 @@ describe("NotificationSettingService", () => {
       const service = new NotificationSettingService();
       const result = await service.getSettings(userId);
 
-      expect(result).toEqual({ ...validSettingsData, userId });
+      expect(result).toEqual({ ...validSettingsData, userId } as any);
       expect(mockFindByUserId).toHaveBeenCalledWith(userId);
     });
 
@@ -83,20 +92,30 @@ describe("NotificationSettingService", () => {
     test("should update settings if found", async () => {
       mockFindByUserId.mockResolvedValue({ ...validSettingsData, userId });
       const updateData = { receiveRealTimeCommentNotifications: false };
-      mockUpdateByUserId.mockResolvedValue({ ...validSettingsData, userId, ...updateData });
+      mockUpdateByUserId.mockResolvedValue({
+        ...validSettingsData,
+        userId,
+        ...updateData,
+      });
 
       const service = new NotificationSettingService();
       const result = await service.updateSettings(userId, updateData);
 
-      expect(result).toEqual({ ...validSettingsData, userId, ...updateData });
+      expect(result).toEqual({
+        ...validSettingsData,
+        userId,
+        ...updateData,
+      } as any);
       expect(mockUpdateByUserId).toHaveBeenCalledWith(userId, updateData);
     });
 
     test("should return null if settings not found for update", async () => {
       mockFindByUserId.mockResolvedValue(null);
-      
+
       const service = new NotificationSettingService();
-      const result = await service.updateSettings(userId, { receiveRealTimeCommentNotifications: false });
+      const result = await service.updateSettings(userId, {
+        receiveRealTimeCommentNotifications: false,
+      });
 
       expect(result).toBeNull();
       expect(mockUpdateByUserId).not.toHaveBeenCalled();

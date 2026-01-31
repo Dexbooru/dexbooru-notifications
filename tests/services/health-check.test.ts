@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 // Mock Mongoose
 const mockMongooseConnection = {
-  readyState: 1
+  readyState: 1,
 };
 
 mock.module("mongoose", () => ({
@@ -16,15 +16,17 @@ mock.module("mongoose", () => ({
 
 // Mock RabbitMQ
 const mockChannelClose = mock(() => Promise.resolve());
-const mockAcquire = mock(() => Promise.resolve({
-  close: mockChannelClose
-}));
+const mockAcquire = mock(() =>
+  Promise.resolve({
+    close: mockChannelClose,
+  }),
+);
 
 mock.module("rabbitmq-client", () => {
   return {
     Connection: class {
       acquire = mockAcquire;
-    }
+    },
   };
 });
 
@@ -34,16 +36,18 @@ describe("HealthCheckService", () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
     process.env.RABBITMQ_URL = "amqp://localhost";
-    
+
     // Reset mocks
     mockMongooseConnection.readyState = 1;
     mockAcquire.mockClear();
     mockChannelClose.mockClear();
-    
+
     // Reset implementation of acquire to default success
-    mockAcquire.mockImplementation(() => Promise.resolve({
-      close: mockChannelClose
-    }));
+    mockAcquire.mockImplementation(() =>
+      Promise.resolve({
+        close: mockChannelClose,
+      }),
+    );
   });
 
   afterEach(() => {
@@ -77,7 +81,9 @@ describe("HealthCheckService", () => {
   });
 
   test("should return false for rabbitMq when acquire throws error", async () => {
-    mockAcquire.mockImplementationOnce(() => Promise.reject(new Error("Connection failed")));
+    mockAcquire.mockImplementationOnce(() =>
+      Promise.reject(new Error("Connection failed")),
+    );
 
     const service = new HealthCheckService();
     const status = await service.getHealthStatus();

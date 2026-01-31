@@ -14,7 +14,7 @@ abstract class BaseRepository<T> implements IRepository<T> {
   public async create(data: Partial<T>): Promise<T> {
     try {
       const created = await (
-        this.model.create as (doc: Partial<T>) => Promise<any>
+        this.model.create as unknown as (doc: Partial<T>) => Promise<T>
       )(data);
       return created as unknown as T;
     } catch (error) {

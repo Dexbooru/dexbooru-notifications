@@ -24,8 +24,8 @@ mock.module("../../../src/core/dependency-injection-container", () => {
     default: {
       instance: {
         getService: mockGetService,
-      }
-    }
+      },
+    },
   };
 });
 
@@ -36,8 +36,8 @@ mock.module("../../../src/core/logger", () => {
     default: {
       instance: {
         error: mockLoggerError,
-      }
-    }
+      },
+    },
   };
 });
 
@@ -59,7 +59,7 @@ describe("AuthenticationController", () => {
       issuedAt: new Date("2025-12-31"),
     };
     mockExchangeJwtForSession.mockResolvedValue(mockSession);
-    
+
     // Instantiate controller
     const controller = new AuthenticationController();
 
@@ -67,8 +67,8 @@ describe("AuthenticationController", () => {
     const req = new Request("http://localhost/api/auth", {
       method: "POST",
       headers: {
-        "Cookie": `${AuthenticationService.DEXBOORU_WEBAPP_COOKIE_KEY}=validtoken`
-      }
+        Cookie: `${AuthenticationService.DEXBOORU_WEBAPP_COOKIE_KEY}=validtoken`,
+      },
     });
 
     // Manually run the middleware (since we are testing controller in isolation)
@@ -76,19 +76,21 @@ describe("AuthenticationController", () => {
 
     // Call handlePost
     const response = await controller.handlePost(req);
-    const body = await response.json() as { data: { expiresAt: string, issuedAt: string } };
+    const body = (await response.json()) as {
+      data: { expiresAt: string; issuedAt: string };
+    };
 
     // Verify
     expect(response.status).toBe(200);
-    expect(body.data).toEqual({ 
-      expiresAt: mockSession.expiresAt.toISOString(), 
-      issuedAt: mockSession.issuedAt.toISOString() 
+    expect(body.data).toEqual({
+      expiresAt: mockSession.expiresAt.toISOString(),
+      issuedAt: mockSession.issuedAt.toISOString(),
     });
-    
+
     // Check Set-Cookie header if possible, or verify response headers
     const setCookie = response.headers.get("Set-Cookie");
     expect(setCookie).toBe("test-session-token");
-    
+
     expect(mockExchangeJwtForSession).toHaveBeenCalledWith("validtoken");
   });
 
@@ -96,9 +98,9 @@ describe("AuthenticationController", () => {
     const controller = new AuthenticationController();
 
     const req = new Request("http://localhost/api/auth", {
-      method: "POST"
+      method: "POST",
     });
-    
+
     // Manually run middleware
     parseCookies(req);
 
@@ -114,13 +116,15 @@ describe("AuthenticationController", () => {
     };
 
     const req = new Request("http://localhost/api/auth", {
-      method: "GET"
+      method: "GET",
     }) as AppRequest;
-    
+
     req.context = { session: mockSession };
 
     const response = await controller.handleGet(req);
-    const body = await response.json() as { data: { authenticated: boolean, userId: string, issuedAt: string } };
+    const body = (await response.json()) as {
+      data: { authenticated: boolean; userId: string; issuedAt: string };
+    };
 
     expect(response.status).toBe(200);
     expect(body.data.authenticated).toBe(true);

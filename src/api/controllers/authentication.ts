@@ -7,6 +7,7 @@ import AuthenticationService from "../../services/authentication";
 import Logger from "../../core/logger";
 import AuthenticationMiddleware from "../../core/middleware/authentication";
 import type { AppRequest } from "../../core/interfaces/request";
+import type { TUserSession } from "../../models/authentication/session";
 
 const controllerName = "AuthenticationController";
 
@@ -27,7 +28,7 @@ class AuthenticationController extends BaseController implements IController {
 
   public override async handleGet(request: Request): Promise<Response> {
     const appRequest = request as AppRequest;
-    const session = appRequest.context?.session;
+    const session = appRequest.context?.session as TUserSession;
 
     return this.ok("Session status retrieved", 200, {
       authenticated: true,

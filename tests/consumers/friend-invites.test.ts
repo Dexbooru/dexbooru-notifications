@@ -6,7 +6,7 @@ import type FriendInviteService from "../../src/services/friend-invites";
 import type { TFriendInviteDto } from "../../src/models/events/friend-invite";
 
 class TestableFriendInviteConsumer extends FriendInviteConsumer {
-  public async testOnBatch(messages: unknown[]): Promise<void> {
+  public async testOnBatch(messages: TFriendInviteDto[]): Promise<void> {
     return this.onBatch(messages);
   }
 }
@@ -19,14 +19,14 @@ describe("FriendInviteConsumer", () => {
   beforeEach(() => {
     DependencyInjectionContainer.instance.clear();
     mockProcessBatch = mock(() => Promise.resolve());
-    
+
     mockService = {
       processBatch: mockProcessBatch,
     } as unknown as FriendInviteService;
 
     DependencyInjectionContainer.instance.add(
       ServiceTokens.FriendInviteService,
-      mockService
+      mockService,
     );
 
     consumer = new TestableFriendInviteConsumer();
@@ -34,11 +34,13 @@ describe("FriendInviteConsumer", () => {
 
   test("should call service processBatch on batch", async () => {
     const messages: TFriendInviteDto[] = [
-        { 
-            senderUserId: "id1", 
-            receiverUserId: "id2", 
-            requestSentAt: "2023-01-01" 
-        }
+      {
+        senderUserId: "id1",
+        receiverUserId: "id2",
+        requestSentAt: new Date("2023-01-01"),
+        wasRead: false,
+        status: "SENT",
+      },
     ];
     await consumer.testOnBatch(messages);
     expect(mockProcessBatch).toHaveBeenCalledWith(messages);
@@ -48,13 +50,17 @@ describe("FriendInviteConsumer", () => {
     const error = new Error("Batch failed");
     mockProcessBatch.mockRejectedValue(error);
     const messages: TFriendInviteDto[] = [
-        { 
-            senderUserId: "id1", 
-            receiverUserId: "id2", 
-            requestSentAt: "2023-01-01" 
-        }
+      {
+        senderUserId: "id1",
+        receiverUserId: "id2",
+        requestSentAt: new Date("2023-01-01"),
+        wasRead: false,
+        status: "SENT",
+      },
     ];
 
-    await expect(consumer.testOnBatch(messages)).rejects.toThrow("Batch failed");
+    await expect(consumer.testOnBatch(messages)).rejects.toThrow(
+      "Batch failed",
+    );
   });
 });

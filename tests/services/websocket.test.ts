@@ -1,6 +1,7 @@
 import { describe, test, expect, mock } from "bun:test";
 import WebSocketService from "../../src/services/websocket";
 import type { Server } from "bun";
+import type { TGlobalEventData } from "../../src/services/events";
 
 describe("WebSocketService", () => {
   test("should publish message if server is set", () => {
@@ -8,7 +9,7 @@ describe("WebSocketService", () => {
     const mockPublish = mock(() => 0); // returns bytes sent
     const mockServer = {
       publish: mockPublish,
-    } as unknown as Server;
+    } as unknown as Server<TGlobalEventData>;
 
     service.setServer(mockServer);
     service.publish("topic", "message");

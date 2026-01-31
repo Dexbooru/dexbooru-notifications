@@ -24,7 +24,7 @@ class NewPostCommentService {
       .filter((i) => i !== null);
 
     if (validComments.length > 0) {
-      await this.newPostCommentRepository.insertMany(validComments as any);
+      await this.newPostCommentRepository.insertMany(validComments);
     }
 
     if (validComments.length < messages.length) {

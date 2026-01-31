@@ -49,11 +49,13 @@ docker-compose up -d
 ### 4. Run the Application
 
 **Development Mode (with hot reload):**
+
 ```bash
 bun run dev
 ```
 
 **Production Build:**
+
 ```bash
 bun run build
 bun start # or run the generated ./dist/index.js
@@ -102,9 +104,9 @@ graph TD
     end
 
     Publisher -- Publishes to 'notification_events' --> RMQ
-    
+
     RMQ -- "event.friend_invite.*" --> FIC
-    RMQ -- "event.post_comment.new" --> NPCC
+    RMQ -- "event.new_post_comment.*" --> NPCC
     RMQ -- "event.#" --> GEC
 
     FIC -- Validates & Batches --> FIS

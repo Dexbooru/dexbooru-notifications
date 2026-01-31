@@ -2,7 +2,10 @@ import { describe, test, expect, mock, beforeEach } from "bun:test";
 import FriendInviteService from "../../src/services/friend-invites";
 import DependencyInjectionContainer from "../../src/core/dependency-injection-container";
 import RepositoryTokens from "../../src/core/tokens/repositories";
-import type { TFriendInvite } from "../../src/models/events/friend-invite";
+import type {
+  TFriendInvite,
+  TFriendInviteDto,
+} from "../../src/models/events/friend-invite";
 
 // Mock Repository
 const mockCreate = mock();
@@ -24,7 +27,7 @@ describe("FriendInviteService", () => {
     DependencyInjectionContainer.instance.clear();
     DependencyInjectionContainer.instance.add(
       RepositoryTokens.FriendInviteRepository,
-      mockRepository
+      mockRepository,
     );
     service = new FriendInviteService();
     mockCreate.mockClear();
@@ -34,17 +37,21 @@ describe("FriendInviteService", () => {
   });
 
   test("should process batch using insertMany", async () => {
-    const payload = [
+    const payload: TFriendInviteDto[] = [
       {
         senderUserId: "00000000-0000-0000-0000-000000000001",
         receiverUserId: "00000000-0000-0000-0000-000000000002",
-        requestSentAt: new Date().toISOString(),
+        requestSentAt: new Date(),
+        wasRead: false,
+        status: "SENT",
       },
       {
         senderUserId: "00000000-0000-0000-0000-000000000003",
         receiverUserId: "00000000-0000-0000-0000-000000000004",
-        requestSentAt: new Date().toISOString(),
-      }
+        requestSentAt: new Date(),
+        wasRead: false,
+        status: "SENT",
+      },
     ];
 
     mockInsertMany.mockResolvedValue([]);
@@ -52,7 +59,10 @@ describe("FriendInviteService", () => {
     await service.processBatch(payload);
 
     expect(mockInsertMany).toHaveBeenCalled();
-    const args = mockInsertMany.mock.calls[0][0] as Partial<TFriendInvite>[];
+    const calls = mockInsertMany.mock.calls;
+    if (!calls || !calls[0]) throw new Error("no calls");
+    const args = calls[0][0] as Partial<TFriendInvite>[];
+    if (!args || !args[0]) throw new Error("no args");
     expect(args).toHaveLength(2);
     expect(args[0].senderUserId).toBeDefined();
     expect(args[0].requestSentAt).toBeInstanceOf(Date);
@@ -63,13 +73,18 @@ describe("FriendInviteService", () => {
     const wasRead = false;
     const page = 1;
     const limit = 20;
-    const mockInvites = [{ id: "invite-1" }];
+    const mockInvites = [{ id: "invite-1" }] as unknown as TFriendInvite[];
 
     mockFindByReceiverId.mockResolvedValue(mockInvites);
 
     const result = await service.getUserInvites(userId, wasRead, page, limit);
 
     expect(result).toBe(mockInvites);
-    expect(mockFindByReceiverId).toHaveBeenCalledWith(userId, wasRead, page, limit);
+    expect(mockFindByReceiverId).toHaveBeenCalledWith(
+      userId,
+      wasRead,
+      page,
+      limit,
+    );
   });
 });

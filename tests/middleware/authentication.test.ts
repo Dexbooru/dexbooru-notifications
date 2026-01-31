@@ -16,20 +16,20 @@ describe("Authentication Middleware", () => {
     mockValidateSession.mockClear();
     // Register mock service
     DependencyInjectionContainer.instance.add(
-      ServiceTokens.AuthenticationService, 
-      mockAuthService
+      ServiceTokens.AuthenticationService,
+      mockAuthService,
     );
   });
 
   test("should call next if session is valid and attach session to context", async () => {
     const mockSession = { userId: "user-123" };
     mockValidateSession.mockResolvedValue(mockSession);
-    
+
     const middleware = new AuthenticationMiddleware();
     const req = new Request("http://localhost", {
       headers: {
-        "Cookie": `${AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY}=valid-token`
-      }
+        Cookie: `${AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY}=valid-token`,
+      },
     });
 
     const mockNextHandler = mock(() => Promise.resolve(new Response("OK")));
@@ -40,7 +40,7 @@ describe("Authentication Middleware", () => {
     expect(response.status).toBe(200);
     expect(await response.text()).toBe("OK");
     expect(mockValidateSession).toHaveBeenCalledWith("valid-token");
-    
+
     // Check context
     expect((req as AppRequest).context).toBeDefined();
     expect((req as AppRequest).context?.session).toEqual(mockSession);
@@ -48,12 +48,12 @@ describe("Authentication Middleware", () => {
 
   test("should return 401 if session is invalid", async () => {
     mockValidateSession.mockResolvedValue(null);
-    
+
     const middleware = new AuthenticationMiddleware();
     const req = new Request("http://localhost", {
       headers: {
-        "Cookie": `${AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY}=invalid-token`
-      }
+        Cookie: `${AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY}=invalid-token`,
+      },
     });
 
     const mockNextHandler = mock(() => Promise.resolve(new Response("OK")));

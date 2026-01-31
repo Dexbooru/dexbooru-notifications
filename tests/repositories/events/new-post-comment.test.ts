@@ -50,10 +50,15 @@ describe("NewPostCommentRepository", () => {
 
     mockExec.mockResolvedValue(mockResult);
 
-    const result = await repo.findByRecipientId(recipientId, wasRead, page, limit);
+    const result = await repo.findByRecipientId(
+      recipientId,
+      wasRead,
+      page,
+      limit,
+    );
 
     expect(result).toBe(mockResult as any);
-    
+
     // Check filter
     expect(mockFind).toHaveBeenCalledWith({
       $or: [
@@ -62,13 +67,13 @@ describe("NewPostCommentRepository", () => {
       ],
       wasRead: wasRead,
     });
-    
+
     // Check sort
     expect(mockSort).toHaveBeenCalledWith({ createdAt: -1 });
-    
+
     // Check skip (page 3, limit 15 -> skip 30)
     expect(mockSkip).toHaveBeenCalledWith(30);
-    
+
     // Check limit
     expect(mockLimit).toHaveBeenCalledWith(15);
   });

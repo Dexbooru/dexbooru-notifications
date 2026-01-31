@@ -32,8 +32,8 @@ mock.module("../../../src/core/dependency-injection-container", () => {
     default: {
       instance: {
         getService: mockGetService,
-      }
-    }
+      },
+    },
   };
 });
 
@@ -51,7 +51,12 @@ describe("NotificationSettingController", () => {
   });
 
   const userId = "550e8400-e29b-41d4-a716-446655440000";
-  const session = { userId, token: "tok", expiresAt: new Date(), issuedAt: new Date() };
+  const session = {
+    userId,
+    token: "tok",
+    expiresAt: new Date(),
+    issuedAt: new Date(),
+  };
 
   const validSettingsData = {
     receiveRealTimeCommentNotifications: true,
@@ -68,15 +73,17 @@ describe("NotificationSettingController", () => {
     const controller = new NotificationSettingController();
     mockGetSettings.mockResolvedValue({ ...validSettingsData, userId });
 
-    const req = new Request("http://localhost/api/settings", { method: "GET" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "GET",
+    }) as AppRequest;
     req.context = { session: session };
 
     const response = await controller.handleGet(req);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     expect(response.status).toBe(200);
-    expect(body.data).toEqual({ 
-      ...validSettingsData, 
+    expect(body.data).toEqual({
+      ...validSettingsData,
       userId,
       createdAt: validSettingsData.createdAt.toISOString(),
       updatedAt: validSettingsData.updatedAt.toISOString(),
@@ -88,7 +95,9 @@ describe("NotificationSettingController", () => {
     const controller = new NotificationSettingController();
     mockGetSettings.mockResolvedValue(null);
 
-    const req = new Request("http://localhost/api/settings", { method: "GET" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "GET",
+    }) as AppRequest;
     req.context = { session: session };
 
     const response = await controller.handleGet(req);
@@ -97,9 +106,11 @@ describe("NotificationSettingController", () => {
 
   test("handleGet should return 401 if not authenticated", async () => {
     const controller = new NotificationSettingController();
-    const req = new Request("http://localhost/api/settings", { method: "GET" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "GET",
+    }) as AppRequest;
     // No context/session
-    
+
     const response = await controller.handleGet(req);
     expect(response.status).toBe(401);
   });
@@ -108,16 +119,18 @@ describe("NotificationSettingController", () => {
     const controller = new NotificationSettingController();
     mockCreateSettings.mockResolvedValue({ ...validSettingsData, userId });
 
-    const req = new Request("http://localhost/api/settings", { method: "POST" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "POST",
+    }) as AppRequest;
     req.context = { session: session };
     req.parsedBody = validSettingsData;
 
     const response = await controller.handlePost(req);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     expect(response.status).toBe(201);
-    expect(body.data).toEqual({ 
-      ...validSettingsData, 
+    expect(body.data).toEqual({
+      ...validSettingsData,
       userId,
       createdAt: validSettingsData.createdAt.toISOString(),
       updatedAt: validSettingsData.updatedAt.toISOString(),
@@ -127,9 +140,13 @@ describe("NotificationSettingController", () => {
 
   test("handlePost should return 409 if settings already exist", async () => {
     const controller = new NotificationSettingController();
-    mockCreateSettings.mockRejectedValue(new Error("Settings already exist for this user"));
+    mockCreateSettings.mockRejectedValue(
+      new Error("Settings already exist for this user"),
+    );
 
-    const req = new Request("http://localhost/api/settings", { method: "POST" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "POST",
+    }) as AppRequest;
     req.context = { session: session };
     req.parsedBody = validSettingsData;
 
@@ -140,19 +157,25 @@ describe("NotificationSettingController", () => {
   test("handlePut should return 200 and updated settings", async () => {
     const controller = new NotificationSettingController();
     const updateData = { receiveRealTimeCommentNotifications: false };
-    mockUpdateSettings.mockResolvedValue({ ...validSettingsData, userId, ...updateData });
+    mockUpdateSettings.mockResolvedValue({
+      ...validSettingsData,
+      userId,
+      ...updateData,
+    });
 
-    const req = new Request("http://localhost/api/settings", { method: "PUT" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "PUT",
+    }) as AppRequest;
     req.context = { session: session };
     req.parsedBody = updateData;
 
     const response = await controller.handlePut(req);
-    const body = await response.json() as any;
+    const body = (await response.json()) as any;
 
     expect(response.status).toBe(200);
-    expect(body.data).toEqual({ 
-      ...validSettingsData, 
-      userId, 
+    expect(body.data).toEqual({
+      ...validSettingsData,
+      userId,
       ...updateData,
       createdAt: validSettingsData.createdAt.toISOString(),
       updatedAt: validSettingsData.updatedAt.toISOString(),
@@ -164,7 +187,9 @@ describe("NotificationSettingController", () => {
     const controller = new NotificationSettingController();
     mockUpdateSettings.mockResolvedValue(null);
 
-    const req = new Request("http://localhost/api/settings", { method: "PUT" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "PUT",
+    }) as AppRequest;
     req.context = { session: session };
     req.parsedBody = {};
 
@@ -176,7 +201,9 @@ describe("NotificationSettingController", () => {
     const controller = new NotificationSettingController();
     mockDeleteSettings.mockResolvedValue(true);
 
-    const req = new Request("http://localhost/api/settings", { method: "DELETE" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "DELETE",
+    }) as AppRequest;
     req.context = { session: session };
 
     const response = await controller.handleDelete(req);
@@ -188,7 +215,9 @@ describe("NotificationSettingController", () => {
     const controller = new NotificationSettingController();
     mockDeleteSettings.mockResolvedValue(false);
 
-    const req = new Request("http://localhost/api/settings", { method: "DELETE" }) as AppRequest;
+    const req = new Request("http://localhost/api/settings", {
+      method: "DELETE",
+    }) as AppRequest;
     req.context = { session: session };
 
     const response = await controller.handleDelete(req);

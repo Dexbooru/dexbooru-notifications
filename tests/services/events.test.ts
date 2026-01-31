@@ -14,8 +14,8 @@ describe("EventService", () => {
     mockValidateSession.mockClear();
     // Register mock service
     DependencyInjectionContainer.instance.add(
-      ServiceTokens.AuthenticationService, 
-      mockAuthService
+      ServiceTokens.AuthenticationService,
+      mockAuthService,
     );
   });
 

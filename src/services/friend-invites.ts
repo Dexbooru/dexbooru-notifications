@@ -42,7 +42,7 @@ class FriendInviteService {
       .filter((i) => i !== null);
 
     if (validInvites.length > 0) {
-      await this.friendInviteRepository.insertMany(validInvites as any);
+      await this.friendInviteRepository.insertMany(validInvites);
     }
 
     if (validInvites.length < messages.length) {

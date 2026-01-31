@@ -7,6 +7,7 @@ import AuthenticationMiddleware from "../../core/middleware/authentication";
 import { BodyValidator } from "../../core/middleware/request-validator";
 import type { AppRequest } from "../../core/interfaces/request";
 import { toResponseDTO } from "../../models/settings/notification-setting";
+import type { TUserSession } from "../../models/authentication/session";
 
 const controllerName = "NotificationSettingController";
 
@@ -14,9 +15,11 @@ const createSettingsSchema = z.object({
   receiveRealTimeCommentNotifications: z.boolean(),
   receiveRealTimePostNotifications: z.boolean(),
   receiveRealTimeCollectionNotifications: z.boolean(),
+  receiveRealTimeFriendInviteNotifications: z.boolean(),
   receiveEmailCommentNotifications: z.boolean(),
   receiveEmailPostNotifications: z.boolean(),
   receiveEmailCollectionNotifications: z.boolean(),
+  receiveEmailFriendInviteNotifications: z.boolean(),
 });
 
 const updateSettingsSchema = createSettingsSchema.partial();
@@ -48,7 +51,8 @@ class NotificationSettingController extends BaseController {
 
   public override async handleGet(request: Request): Promise<Response> {
     const appRequest = request as AppRequest;
-    const userId = appRequest.context?.session?.userId;
+    const session = appRequest.context?.session as TUserSession | undefined;
+    const userId = session?.userId;
 
     if (!userId) {
       return this.error("Unauthorized", 401);
@@ -69,7 +73,8 @@ class NotificationSettingController extends BaseController {
 
   public override async handlePost(request: Request): Promise<Response> {
     const appRequest = request as AppRequest;
-    const userId = appRequest.context?.session?.userId;
+    const session = appRequest.context?.session as TUserSession | undefined;
+    const userId = session?.userId;
 
     if (!userId) {
       return this.error("Unauthorized", 401);
@@ -88,8 +93,11 @@ class NotificationSettingController extends BaseController {
         201,
         toResponseDTO(settings),
       );
-    } catch (error: any) {
-      if (error.message === "Settings already exist for this user") {
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        error.message === "Settings already exist for this user"
+      ) {
         return this.error(error.message, 409);
       }
       return this.error(`Internal server error: ${error}`, 500);
@@ -98,7 +106,8 @@ class NotificationSettingController extends BaseController {
 
   public override async handlePut(request: Request): Promise<Response> {
     const appRequest = request as AppRequest;
-    const userId = appRequest.context?.session?.userId;
+    const session = appRequest.context?.session as TUserSession | undefined;
+    const userId = session?.userId;
 
     if (!userId) {
       return this.error("Unauthorized", 401);
@@ -122,7 +131,8 @@ class NotificationSettingController extends BaseController {
 
   public override async handleDelete(request: Request): Promise<Response> {
     const appRequest = request as AppRequest;
-    const userId = appRequest.context?.session?.userId;
+    const session = appRequest.context?.session as TUserSession | undefined;
+    const userId = session?.userId;
 
     if (!userId) {
       return this.error("Unauthorized", 401);

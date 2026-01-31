@@ -11,29 +11,35 @@ export class BodyValidator<T> extends BaseMiddleware {
     try {
       const body = await req.json();
       const parsed = this.schema.parse(body);
-      
+
       (req as AppRequest).parsedBody = parsed;
 
       return this.next(req);
     } catch (error) {
       if (error instanceof ZodError) {
-        return new Response(JSON.stringify({
-          status: 400,
-          message: "Validation Error",
-          errors: error.issues
-        }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        });
+        return new Response(
+          JSON.stringify({
+            status: 400,
+            message: "Validation Error",
+            errors: error.issues,
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
       }
-      
-      return new Response(JSON.stringify({
+
+      return new Response(
+        JSON.stringify({
           status: 400,
-          message: "Invalid JSON body"
-      }), {
+          message: "Invalid JSON body",
+        }),
+        {
           status: 400,
-          headers: { "Content-Type": "application/json" }
-      });
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
   }
 }

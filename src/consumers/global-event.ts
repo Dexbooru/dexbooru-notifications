@@ -43,7 +43,8 @@ class GlobalEventConsumer extends BaseConsumer<TGlobalEventPayload> {
       const recipientIds = new Set<string>();
 
       // Handle specific routing for new post comments
-      if (payload.postAuthorId) recipientIds.add(payload.postAuthorId as string);
+      if (payload.postAuthorId)
+        recipientIds.add(payload.postAuthorId as string);
       if (payload.parentCommentAuthorId)
         recipientIds.add(payload.parentCommentAuthorId as string);
 

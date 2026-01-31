@@ -1,6 +1,7 @@
 export default abstract class BaseMiddleware {
   private nextMiddleware: BaseMiddleware | null = null;
-  private controllerHandler: ((req: Request) => Promise<Response>) | null = null;
+  private controllerHandler: ((req: Request) => Promise<Response>) | null =
+    null;
 
   public setNext(next: BaseMiddleware): void {
     this.nextMiddleware = next;
@@ -17,7 +18,9 @@ export default abstract class BaseMiddleware {
     if (this.controllerHandler) {
       return this.controllerHandler(req);
     }
-    return new Response("Internal Server Error: No handler configured", { status: 500 });
+    return new Response("Internal Server Error: No handler configured", {
+      status: 500,
+    });
   }
 
   public abstract run(req: Request): Promise<Response>;

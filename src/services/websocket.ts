@@ -11,7 +11,9 @@ class WebSocketService {
 
   public publish(topic: string, data: string): void {
     if (!this.server) {
-      Logger.instance.warn("WebSocketService: Server instance not set. Cannot publish message.");
+      Logger.instance.warn(
+        "WebSocketService: Server instance not set. Cannot publish message.",
+      );
       return;
     }
 

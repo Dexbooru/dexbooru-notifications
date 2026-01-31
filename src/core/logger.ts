@@ -24,7 +24,7 @@ class Logger {
     return this.#instance;
   }
 
-  public info(message: string, ...args: any[]): void {
+  public info(message: string, ...args: unknown[]): void {
     if (args.length > 0) {
       this.logger.info({ args }, message);
     } else {
@@ -32,7 +32,7 @@ class Logger {
     }
   }
 
-  public error(message: string, ...args: any[]): void {
+  public error(message: string, ...args: unknown[]): void {
     if (args.length > 0) {
       this.logger.error({ args }, message);
     } else {
@@ -40,7 +40,7 @@ class Logger {
     }
   }
 
-  public warn(message: string, ...args: any[]): void {
+  public warn(message: string, ...args: unknown[]): void {
     if (args.length > 0) {
       this.logger.warn({ args }, message);
     } else {
@@ -48,7 +48,7 @@ class Logger {
     }
   }
 
-  public debug(message: string, ...args: any[]): void {
+  public debug(message: string, ...args: unknown[]): void {
     if (args.length > 0) {
       this.logger.debug({ args }, message);
     } else {

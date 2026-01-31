@@ -16,7 +16,7 @@ class NewPostCommentRepository extends BaseRepository<TNewPostComment> {
     limit: number,
   ): Promise<TNewPostComment[]> {
     try {
-      const filter: Record<string, any> = {
+      const filter: Record<string, unknown> = {
         $or: [
           { postAuthorId: recipientId },
           { parentCommentAuthorId: recipientId },

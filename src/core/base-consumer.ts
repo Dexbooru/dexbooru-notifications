@@ -23,7 +23,7 @@ abstract class BaseConsumer<T = unknown> implements IConsumer {
   private messageBuffer: { body: unknown; raw: AsyncMessage }[] = [];
   private pendingPromises: {
     resolve: () => void;
-    reject: (err: any) => void;
+    reject: (err: unknown) => void;
   }[] = [];
   private batchTimer: Timer | null = null;
 
@@ -118,8 +118,10 @@ abstract class BaseConsumer<T = unknown> implements IConsumer {
     this.pendingPromises = [];
 
     const validPayloads: T[] = [];
-    const validPromises: { resolve: () => void; reject: (err: any) => void }[] =
-      [];
+    const validPromises: {
+      resolve: () => void;
+      reject: (err: unknown) => void;
+    }[] = [];
 
     batchMessages.forEach((msg, index) => {
       const promise = batchPromises[index];
