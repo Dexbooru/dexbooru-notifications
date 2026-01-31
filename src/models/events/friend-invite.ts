@@ -9,6 +9,12 @@ const schema = new Schema(
     receiverUserId: { type: Schema.Types.UUID, required: true, index: true },
     requestSentAt: { type: Date, required: true },
     wasRead: { type: Boolean, default: true },
+    status: {
+      type: String,
+      enum: ["SENT", "ACCEPTED"],
+      default: "SENT",
+      required: true,
+    },
   },
   { collection: collectionName, timestamps: true },
 );
@@ -22,6 +28,7 @@ const FriendInviteDtoSchema = z.object({
   receiverUserId: z.uuid(),
   requestSentAt: z.string().transform((arg) => new Date(arg)),
   wasRead: z.boolean().default(false),
+  status: z.enum(["SENT", "ACCEPTED"]).default("SENT"),
 });
 
 type TFriendInviteDto = z.infer<typeof FriendInviteDtoSchema>;
@@ -32,6 +39,7 @@ const dtoToModel = (dto: TFriendInviteDto): Partial<TFriendInvite> => {
     receiverUserId: new Types.UUID(dto.receiverUserId),
     requestSentAt: new Date(dto.requestSentAt),
     wasRead: dto.wasRead,
+    status: dto.status,
   };
 };
 

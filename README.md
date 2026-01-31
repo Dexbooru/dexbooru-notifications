@@ -72,6 +72,7 @@ The system uses a consumer-based architecture to process events.
 1.  **Producers** publish events to the `notification_events` exchange in RabbitMQ.
 2.  **Consumers** (running in this service) subscribe to specific routing keys.
     - `FriendInviteConsumer`: Listens for friend invites, validates them, and persists them to MongoDB.
+    - `NewPostCommentConsumer`: Listens for new post comments, validates them, and persists them to MongoDB.
     - `GlobalEventConsumer`: Listens for all events (`event.#`) and broadcasts them to relevant WebSocket clients.
 3.  **Clients** connect via WebSocket to receive real-time updates.
 
@@ -88,8 +89,10 @@ graph TD
 
     subgraph "Dexbooru Notifications Service"
         FIC[FriendInviteConsumer]
+        NPCC[NewPostCommentConsumer]
         GEC[GlobalEventConsumer]
         FIS[FriendInviteService]
+        NPCS[NewPostCommentService]
         WSS[WebSocketService]
         API[API Controllers]
     end
@@ -101,10 +104,14 @@ graph TD
     Publisher -- Publishes to 'notification_events' --> RMQ
     
     RMQ -- "event.friend_invite.*" --> FIC
+    RMQ -- "event.post_comment.new" --> NPCC
     RMQ -- "event.#" --> GEC
 
     FIC -- Validates & Batches --> FIS
     FIS -- Persists --> Mongo
+
+    NPCC -- Validates & Batches --> NPCS
+    NPCS -- Persists --> Mongo
 
     GEC -- "Broadcasts" --> WSS
     WSS -- "WebSocket Push" --> User

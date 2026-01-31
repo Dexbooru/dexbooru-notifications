@@ -40,20 +40,35 @@ class GlobalEventConsumer extends BaseConsumer<TGlobalEventPayload> {
 
   protected async onBatch(messages: TGlobalEventPayload[]): Promise<void> {
     for (const payload of messages) {
-      const eventChannelName = this.eventService.computeChannelKey(payload);
+      const recipientIds = new Set<string>();
 
-      if (!eventChannelName) {
-        Logger.instance.warn(
-          "Could not compute channel key for payload",
-          payload,
-        );
+      // Handle specific routing for new post comments
+      if (payload.postAuthorId) recipientIds.add(payload.postAuthorId as string);
+      if (payload.parentCommentAuthorId)
+        recipientIds.add(payload.parentCommentAuthorId as string);
+
+      // Fallback to generic channel key logic if no specific recipients found
+      if (recipientIds.size === 0) {
+        const eventChannelName = this.eventService.computeChannelKey(payload);
+        if (eventChannelName) {
+          const data = JSON.stringify(payload);
+          Logger.instance.info(`Broadcasting to ${eventChannelName}: ${data}`);
+          this.webSocketService.publish(eventChannelName, data);
+        } else {
+          Logger.instance.warn(
+            "Could not compute channel key for payload",
+            payload,
+          );
+        }
         continue;
       }
 
       const data = JSON.stringify(payload);
-
-      Logger.instance.info(`Broadcasting to ${eventChannelName}: ${data}`);
-      this.webSocketService.publish(eventChannelName, data);
+      recipientIds.forEach((recipientId) => {
+        const channelName = this.eventService.getChannelName(recipientId);
+        Logger.instance.info(`Broadcasting to ${channelName}: ${data}`);
+        this.webSocketService.publish(channelName, data);
+      });
     }
   }
 }

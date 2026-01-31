@@ -84,7 +84,13 @@ mock.module("../../src/core/tokens/repositories", () => ({
 mock.module("../../src/core/tokens/services", () => ({
   default: { 
     TEST_SERVICE: "TestService",
-    WebSocketService: "WebSocketService"
+    WebSocketService: "WebSocketService",
+    HealthCheckService: "HealthCheckService",
+    AuthenticationService: "AuthenticationService",
+    EventService: "EventService",
+    NotificationSettingService: "NotificationSettingService",
+    FriendInviteService: "FriendInviteService",
+    NewPostCommentService: "NewPostCommentService",
   }
 }));
 

@@ -1,5 +1,4 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
-import NotificationsController from "../../../src/api/controllers/notifications";
 import ServiceTokens from "../../../src/core/tokens/services";
 import type { AppRequest } from "../../../src/core/interfaces/request";
 
@@ -9,10 +8,19 @@ const mockFriendInviteService = {
   getUserInvites: mockGetUserInvites,
 };
 
+// Mock NewPostCommentService
+const mockGetUserComments = mock();
+const mockNewPostCommentService = {
+  getUserComments: mockGetUserComments,
+};
+
 // Mock DependencyInjectionContainer
 const mockGetService = mock((token: string) => {
   if (token === ServiceTokens.FriendInviteService) {
     return mockFriendInviteService;
+  }
+  if (token === ServiceTokens.NewPostCommentService) {
+    return mockNewPostCommentService;
   }
   return {};
 });
@@ -27,9 +35,13 @@ mock.module("../../../src/core/dependency-injection-container", () => {
   };
 });
 
+// Import controller AFTER mocking the dependency it uses
+import NotificationsController from "../../../src/api/controllers/notifications";
+
 describe("NotificationsController", () => {
   beforeEach(() => {
     mockGetUserInvites.mockClear();
+    mockGetUserComments.mockClear();
     mockGetService.mockClear();
   });
 
@@ -43,8 +55,10 @@ describe("NotificationsController", () => {
       userId: "user-123",
     };
     const mockInvites = [{ id: "invite-1" }];
+    const mockComments = [{ id: "comment-1" }];
 
     mockGetUserInvites.mockResolvedValue(mockInvites);
+    mockGetUserComments.mockResolvedValue(mockComments);
 
     const req = new Request("http://localhost/api/notifications?page=1&limit=20&read=false") as AppRequest;
     
@@ -56,6 +70,8 @@ describe("NotificationsController", () => {
 
     expect(response.status).toBe(200);
     expect(body.data.newFriendInvites).toEqual(mockInvites);
+    expect(body.data.newPostComments).toEqual(mockComments);
     expect(mockGetUserInvites).toHaveBeenCalledWith("user-123", false, 1, 20);
+    expect(mockGetUserComments).toHaveBeenCalledWith("user-123", false, 1, 20);
   });
 });
