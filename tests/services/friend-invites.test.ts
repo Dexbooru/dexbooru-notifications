@@ -8,11 +8,13 @@ import type { TFriendInvite } from "../../src/models/events/friend-invite";
 const mockCreate = mock();
 const mockFindById = mock();
 const mockInsertMany = mock();
+const mockFindByReceiverId = mock();
 
 const mockRepository = {
   create: mockCreate,
   findById: mockFindById,
   insertMany: mockInsertMany,
+  findByReceiverId: mockFindByReceiverId,
 };
 
 describe("FriendInviteService", () => {
@@ -28,6 +30,7 @@ describe("FriendInviteService", () => {
     mockCreate.mockClear();
     mockFindById.mockClear();
     mockInsertMany.mockClear();
+    mockFindByReceiverId.mockClear();
   });
 
   test("should process batch using insertMany", async () => {
@@ -53,5 +56,20 @@ describe("FriendInviteService", () => {
     expect(args).toHaveLength(2);
     expect(args[0].senderUserId).toBeDefined();
     expect(args[0].requestSentAt).toBeInstanceOf(Date);
+  });
+
+  test("should call findByReceiverId when getting user invites", async () => {
+    const userId = "user-123";
+    const wasRead = false;
+    const page = 1;
+    const limit = 20;
+    const mockInvites = [{ id: "invite-1" }];
+
+    mockFindByReceiverId.mockResolvedValue(mockInvites);
+
+    const result = await service.getUserInvites(userId, wasRead, page, limit);
+
+    expect(result).toBe(mockInvites);
+    expect(mockFindByReceiverId).toHaveBeenCalledWith(userId, wasRead, page, limit);
   });
 });

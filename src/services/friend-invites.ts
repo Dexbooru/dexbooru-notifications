@@ -51,6 +51,20 @@ class FriendInviteService {
       );
     }
   }
+
+  public async getUserInvites(
+    userId: string,
+    wasRead: boolean | undefined,
+    page: number,
+    limit: number,
+  ): Promise<TFriendInvite[]> {
+    return await this.friendInviteRepository.findByReceiverId(
+      userId,
+      wasRead,
+      page,
+      limit,
+    );
+  }
 }
 
 export default FriendInviteService;

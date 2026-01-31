@@ -6,6 +6,7 @@
   "scripts": {
     "test": "LOG_LEVEL=silent bun test",
     "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
     "build": "bun build src/index.ts --outdir ./dist --target bun",
     "prepare": "husky"
   },
