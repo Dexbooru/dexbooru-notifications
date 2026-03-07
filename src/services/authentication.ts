@@ -32,7 +32,7 @@ class AuthenticationService {
   private buildSessionCookieData(token: string): string {
     const name = AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY;
     const maxAge = AuthenticationService.SESSION_COOKIE_MAX_AGE;
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd = process.env.APP_ENV === "production";
     const allowedDomain = process.env.APP_DOMAIN;
 
     const cookieParts = [
@@ -120,7 +120,7 @@ class AuthenticationService {
 
   public buildClearSessionCookie(): string {
     const name = AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY;
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd = process.env.APP_ENV === "production";
 
     const cookieParts = [
       `${name}=`,
