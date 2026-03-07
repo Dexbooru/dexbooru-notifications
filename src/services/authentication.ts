@@ -33,6 +33,7 @@ class AuthenticationService {
     const name = AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY;
     const maxAge = AuthenticationService.SESSION_COOKIE_MAX_AGE;
     const isProd = process.env.NODE_ENV === "production";
+    const allowedDomain = process.env.APP_DOMAIN;
 
     const cookieParts = [
       `${name}=${token}`,
@@ -44,6 +45,7 @@ class AuthenticationService {
 
     if (isProd) {
       cookieParts.push("Secure");
+      cookieParts.push(`Domain=${allowedDomain}`);
     }
 
     return cookieParts.join("; ");
@@ -133,6 +135,12 @@ class AuthenticationService {
     }
 
     return cookieParts.join("; ");
+  }
+
+  public async findSessionByToken(token: string) {
+    return await this.userSessionRepository.findOne({
+      token,
+    });
   }
 }
 

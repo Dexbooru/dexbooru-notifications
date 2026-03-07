@@ -43,9 +43,28 @@ class AuthenticationController extends BaseController implements IController {
       const originJwtToken = (request as BunRequest).cookies.get(
         AuthenticationService.DEXBOORU_WEBAPP_COOKIE_KEY,
       );
+      const currentSessionToken = (request as BunRequest).cookies.get(
+        AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY,
+      );
 
       if (!originJwtToken) {
         return this.error("Token cookie is required", 400);
+      }
+
+      if (currentSessionToken) {
+        const matchingSession =
+          await this.authenticationService.findSessionByToken(
+            currentSessionToken,
+          );
+
+        return this.ok(
+          "Session already exists and is valid, so it will be reused",
+          200,
+          {
+            expiresAt: matchingSession?.expiresAt,
+            issuedAt: matchingSession?.issuedAt,
+          },
+        );
       }
 
       const exchangeData =
@@ -62,7 +81,7 @@ class AuthenticationController extends BaseController implements IController {
 
       return this.ok(
         "Session created successfully",
-        200,
+        201,
         {
           expiresAt: session.expiresAt,
           issuedAt: session.issuedAt,

@@ -88,7 +88,7 @@ describe("AuthenticationController", () => {
     };
 
     // Verify
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(body.data).toEqual({
       expiresAt: mockSession.expiresAt.toISOString(),
       issuedAt: mockSession.issuedAt.toISOString(),
