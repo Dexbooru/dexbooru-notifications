@@ -25,8 +25,6 @@ export default class AuthenticationMiddleware extends BaseMiddleware {
       AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY,
     );
 
-    console.log(sessionToken);
-
     if (!sessionToken) {
       return new Response("Unauthorized: No session token provided", {
         status: 401,

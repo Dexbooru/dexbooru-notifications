@@ -34,7 +34,11 @@ const MarkAsReadBodySchema = z.object({
       friendInviteIds: z.array(z.string()).optional().default([]),
     })
     .optional()
-    .default({}),
+    .default({
+      newPostCommentIds: [],
+      friendInviteIds: [],
+      newPostLikeIds: [],
+    }),
 });
 
 type MarkAsReadBody = z.infer<typeof MarkAsReadBodySchema>;
@@ -71,7 +75,6 @@ export default class NotificationsController extends BaseController {
   public override async handleGet(req: Request): Promise<Response> {
     const session = (req as AppRequest).context!.session as TUserSession;
     const sessionUserId = session.userId.toString();
-    console.log(sessionUserId);
 
     const { page, limit, read } = this.getParsedQuery<NotificationQuery>(req);
 
