@@ -21,11 +21,11 @@ export default class AuthenticationMiddleware extends BaseMiddleware {
     const appReq = req as AppRequest;
     const cookies = appReq.cookies;
 
-    // Cookie map might not be initialized if parseCookies failed or something, but parseCookies ensures it is.
-    // However, TypeScript might complain if we don't check.
     const sessionToken = cookies?.get(
       AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY,
     );
+
+    console.log(sessionToken);
 
     if (!sessionToken) {
       return new Response("Unauthorized: No session token provided", {

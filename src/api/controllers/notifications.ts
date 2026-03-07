@@ -1,5 +1,6 @@
 import BaseController from "../../core/base-controller";
 import AuthenticationMiddleware from "../../core/middleware/authentication";
+import { BodyValidator } from "../../core/middleware/request-validator";
 import { UrlQueryValidator } from "../../core/middleware/url-query-validator";
 import { PaginationSchema } from "../../core/request-schemas/pagination";
 import type { AppRequest } from "../../core/interfaces/request";
@@ -24,6 +25,20 @@ const NotificationQuerySchema = PaginationSchema.extend({
 
 type NotificationQuery = z.infer<typeof NotificationQuerySchema>;
 
+const MarkAsReadBodySchema = z.object({
+  all: z.boolean().optional().default(false),
+  notificationIds: z
+    .object({
+      newPostLikeIds: z.array(z.string()).optional().default([]),
+      newPostCommentIds: z.array(z.string()).optional().default([]),
+      friendInviteIds: z.array(z.string()).optional().default([]),
+    })
+    .optional()
+    .default({}),
+});
+
+type MarkAsReadBody = z.infer<typeof MarkAsReadBodySchema>;
+
 export default class NotificationsController extends BaseController {
   private friendInviteService: FriendInviteService;
   private newPostCommentService: NewPostCommentService;
@@ -47,28 +62,35 @@ export default class NotificationsController extends BaseController {
       new AuthenticationMiddleware(),
       new UrlQueryValidator(NotificationQuerySchema),
     ]);
+    this.registerMiddleware("handlePatch", [
+      new AuthenticationMiddleware(),
+      new BodyValidator(MarkAsReadBodySchema),
+    ]);
   }
 
   public override async handleGet(req: Request): Promise<Response> {
     const session = (req as AppRequest).context!.session as TUserSession;
+    const sessionUserId = session.userId.toString();
+    console.log(sessionUserId);
+
     const { page, limit, read } = this.getParsedQuery<NotificationQuery>(req);
 
     const [newFriendInvites, newPostComments, newPostLikes] = await Promise.all(
       [
         this.friendInviteService.getUserInvites(
-          session.userId.toString(),
+          sessionUserId,
           read,
           page,
           limit,
         ),
         this.newPostCommentService.getUserComments(
-          session.userId.toString(),
+          sessionUserId,
           read,
           page,
           limit,
         ),
         this.newPostLikeNotificationService.getUserLikes(
-          session.userId.toString(),
+          sessionUserId,
           read,
           page,
           limit,
@@ -87,5 +109,48 @@ export default class NotificationsController extends BaseController {
       200,
       combinedNotifications,
     );
+  }
+
+  public override async handlePatch(req: Request): Promise<Response> {
+    const session = (req as AppRequest).context!.session as TUserSession;
+    const sessionUserId = session.userId.toString();
+    const { all, notificationIds } = this.getParsedBody<MarkAsReadBody>(req);
+
+    let totalMarked = 0;
+
+    if (all) {
+      const [likes, comments, invites] = await Promise.all([
+        this.newPostLikeNotificationService.markAllAsRead(sessionUserId),
+        this.newPostCommentService.markAllAsRead(sessionUserId),
+        this.friendInviteService.markAllAsRead(sessionUserId),
+      ]);
+      totalMarked = likes + comments + invites;
+    } else {
+      const { newPostLikeIds, newPostCommentIds, friendInviteIds } =
+        notificationIds;
+
+      const results = await Promise.all([
+        newPostLikeIds.length > 0
+          ? this.newPostLikeNotificationService.markAsRead(
+              sessionUserId,
+              newPostLikeIds,
+            )
+          : 0,
+        newPostCommentIds.length > 0
+          ? this.newPostCommentService.markAsRead(
+              sessionUserId,
+              newPostCommentIds,
+            )
+          : 0,
+        friendInviteIds.length > 0
+          ? this.friendInviteService.markAsRead(sessionUserId, friendInviteIds)
+          : 0,
+      ]);
+      totalMarked = results.reduce((sum, count) => sum + count, 0);
+    }
+
+    return this.ok("Notifications marked as read", 200, {
+      markedCount: totalMarked,
+    });
   }
 }

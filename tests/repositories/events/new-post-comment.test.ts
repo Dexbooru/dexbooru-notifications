@@ -6,7 +6,8 @@ const mockExec = mock();
 const mockLimit = mock(() => ({ exec: mockExec }));
 const mockSkip = mock(() => ({ limit: mockLimit }));
 const mockSort = mock(() => ({ skip: mockSkip }));
-const mockFind = mock(() => ({ sort: mockSort }));
+const mockSelect = mock(() => ({ sort: mockSort }));
+const mockFind = mock(() => ({ select: mockSelect }));
 
 const mockModel = {
   find: mockFind,
@@ -30,6 +31,7 @@ mock.module("../../../src/models/events/new-post-comment", () => {
 describe("NewPostCommentRepository", () => {
   beforeEach(() => {
     mockFind.mockClear();
+    mockSelect.mockClear();
     mockSort.mockClear();
     mockSkip.mockClear();
     mockLimit.mockClear();

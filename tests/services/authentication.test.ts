@@ -33,8 +33,6 @@ describe("AuthenticationService", () => {
 
     mockCreate.mockImplementation(async (data: any) => data);
 
-    // Manually register the mock repo in the real container (it's a singleton)
-    // We might need to clear it first or just overwrite
     DependencyInjectionContainer.instance.add(
       RepositoryTokens.UserSessionRepository,
       mockRepo,
@@ -50,10 +48,10 @@ describe("AuthenticationService", () => {
     const result = await authService.exchangeJwtForSession(token);
 
     expect(result).toBeDefined();
-    expect(result!.token.length).toBe(64); // hex of 32 bytes
+    expect(result!.session.token.length).toBe(64); // hex of 32 bytes
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        token: result!.token,
+        token: result!.session.token,
       }),
     );
   });

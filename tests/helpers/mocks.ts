@@ -1,3 +1,4 @@
+import { mock } from "bun:test";
 import BaseConsumer from "../../src/core/base-consumer";
 import BaseController from "../../src/core/base-controller";
 

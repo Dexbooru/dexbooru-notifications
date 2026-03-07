@@ -6,6 +6,7 @@ import WebSocketService from "./websocket";
 import FriendInviteService from "./friend-invites";
 import NewPostCommentService from "./new-post-comment";
 import NewPostLikeNotificationService from "./new-post-like";
+import RealtimePublisherService from "./realtime-publisher";
 
 export {
   HealthCheckService,
@@ -16,4 +17,5 @@ export {
   FriendInviteService,
   NewPostCommentService,
   NewPostLikeNotificationService,
+  RealtimePublisherService as RealtimePublisher,
 };

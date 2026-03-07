@@ -1,0 +1,23 @@
+meta {
+  name: notification events websocket
+  type: ws
+  seq: 2
+}
+
+ws {
+  url: {{base_url}}/events
+  body: ws
+  auth: inherit
+}
+
+headers {
+  Cookie: dexbooru-notifications-session=68ff0432b915b7c569618d7e47f538d8722cb261d7b7ca484bba15df7c5a75af
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+    {}
+  '''
+}

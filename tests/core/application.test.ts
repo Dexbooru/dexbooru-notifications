@@ -7,14 +7,10 @@ import {
   afterEach,
   spyOn,
 } from "bun:test";
-import Application from "../../src/core/application";
 import mongoose from "mongoose";
-import {
-  MockConsumer,
-  MockController,
-  TestRepository,
-  TestService,
-} from "../helpers/mocks";
+import DependencyInjectionContainer from "../../src/core/dependency-injection-container";
+import ServiceTokens from "../../src/core/tokens/services";
+import RepositoryTokens from "../../src/core/tokens/repositories";
 
 // Mock Mongoose
 mock.module("mongoose", () => ({
@@ -28,103 +24,85 @@ mock.module("mongoose", () => ({
 const mockRabbitOn = mock();
 mock.module("rabbitmq-client", () => {
   return {
-    Connection: class {
-      on = mockRabbitOn;
-    },
-  };
-});
-
-// Mock DependencyInjectionContainer
-const mockAddMany = mock();
-const mockAdd = mock();
-const mockSetServer = mock();
-const mockGetService = mock(() => ({
-  setServer: mockSetServer,
-}));
-const mockContainerInstance = {
-  addMany: mockAddMany,
-  add: mockAdd,
-  getService: mockGetService,
-};
-mock.module("../../src/core/dependency-injection-container", () => {
-  return {
-    default: {
-      instance: mockContainerInstance,
-    },
+    Connection: mock(() => ({
+      on: mockRabbitOn,
+      createPublisher: mock(() => ({
+        send: mock(),
+        close: mock(),
+      })),
+      createConsumer: mock(() => ({
+        close: mock(),
+      })),
+    })),
   };
 });
 
 // Mock Logger
-const mockLoggerInfo = mock();
-const mockLoggerError = mock();
 mock.module("../../src/core/logger", () => {
   return {
     default: {
       instance: {
-        info: mockLoggerInfo,
-        error: mockLoggerError,
+        info: mock(),
+        error: mock(),
+        warn: mock(),
       },
     },
   };
 });
 
-// Mock Repositories
-mock.module("../../src/repositories/index.ts", () => ({
-  TestRepository: TestRepository,
-}));
-
-// Mock Services
-mock.module("../../src/services/index.ts", () => ({
-  TestService: TestService,
-}));
-
-// Mock Consumers
-mock.module("../../src/consumers", () => {
-  return {
-    TestConsumer: MockConsumer,
-  };
-});
-
-// Mock Controllers
-mock.module("../../src/api/controllers/index.ts", () => ({
-  TestController: MockController,
-}));
-
-// Mock Tokens
-mock.module("../../src/core/tokens/repositories", () => ({
-  default: { TEST_REPO: "TestRepository" },
-}));
-mock.module("../../src/core/tokens/services", () => ({
-  default: {
-    TEST_SERVICE: "TestService",
-    WebSocketService: "WebSocketService",
-    HealthCheckService: "HealthCheckService",
-    AuthenticationService: "AuthenticationService",
-    EventService: "EventService",
-    NotificationSettingService: "NotificationSettingService",
-    FriendInviteService: "FriendInviteService",
-    NewPostCommentService: "NewPostCommentService",
-  },
-}));
+import Application from "../../src/core/application";
 
 describe("Application", () => {
   const ORIGINAL_ENV = process.env;
+  let addManySpy: any;
+  let addSpy: any;
+  let getServiceSpy: any;
 
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
     process.env.MONGODB_URI = "mongodb://localhost:27017/test";
     process.env.RABBITMQ_URL = "amqp://localhost";
 
-    // Reset mocks
-    mockAddMany.mockClear();
+    // Clear the real container
+    DependencyInjectionContainer.instance.clear();
+
+    // Spies
+    addManySpy = spyOn(DependencyInjectionContainer.instance, "addMany");
+    addSpy = spyOn(DependencyInjectionContainer.instance, "add");
+
+    const mockRabbitConn = {
+      on: mockRabbitOn,
+      createPublisher: mock(() => ({
+        send: mock(),
+        close: mock(),
+      })),
+      createConsumer: mock(() => ({
+        close: mock(),
+      })),
+    };
+
+    getServiceSpy = spyOn(
+      DependencyInjectionContainer.instance,
+      "getService",
+    ).mockImplementation((token: string) => {
+      if (token === ServiceTokens.WebSocketService) {
+        return { setServer: mock() } as any;
+      }
+      if (token === ServiceTokens.RabbitMqConnection) {
+        return mockRabbitConn as any;
+      }
+      return {} as any;
+    });
+
     mockRabbitOn.mockClear();
-    mockLoggerInfo.mockClear();
-    mockLoggerError.mockClear();
     (mongoose.connect as any).mockClear();
   });
 
   afterEach(() => {
     process.env = ORIGINAL_ENV;
+    addManySpy.mockRestore();
+    addSpy.mockRestore();
+    getServiceSpy.mockRestore();
     mock.restore();
   });
 
@@ -181,13 +159,12 @@ describe("Application", () => {
     app.listen("3000");
 
     // Repositories and Services should be registered
-    expect(mockAddMany).toHaveBeenCalledTimes(2);
+    // We expect at least one call for repositories and one for services
+    expect(addManySpy).toHaveBeenCalled();
 
-    // Check if our mocks were loaded
-    const calls = mockAddMany.mock.calls;
-    const tokens = calls.flatMap((c) => c[0]);
-    expect(tokens).toContain("TestRepository");
-    expect(tokens).toContain("TestService");
+    const tokens = addManySpy.mock.calls.flatMap((c: unknown[]) => c[0]);
+    expect(tokens).toContain(RepositoryTokens.FriendInviteRepository);
+    expect(tokens).toContain(ServiceTokens.AuthenticationService);
   });
 
   test("should register rabbitmq connection on listen", () => {

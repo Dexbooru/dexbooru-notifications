@@ -28,25 +28,37 @@ mock.module("../../src/core/logger", () => {
 describe("NewPostCommentConsumer", () => {
   let consumer: TestableNewPostCommentConsumer;
   let mockService: NewPostCommentService;
+  let mockRealtimePublisher: any;
   let mockProcessBatch: ReturnType<typeof mock>;
+  let mockPublish: ReturnType<typeof mock>;
 
   beforeEach(() => {
     DependencyInjectionContainer.instance.clear();
     mockProcessBatch = mock(() => Promise.resolve());
+    mockPublish = mock(() => Promise.resolve());
 
     mockService = {
       processBatch: mockProcessBatch,
     } as unknown as NewPostCommentService;
+
+    mockRealtimePublisher = {
+      publish: mockPublish,
+    };
 
     DependencyInjectionContainer.instance.add(
       ServiceTokens.NewPostCommentService,
       mockService,
     );
 
+    DependencyInjectionContainer.instance.add(
+      ServiceTokens.RealtimePublisher,
+      mockRealtimePublisher,
+    );
+
     consumer = new TestableNewPostCommentConsumer();
   });
 
-  test("should call service processBatch on batch", async () => {
+  test("should call service processBatch and publish on batch", async () => {
     const messages: TNewPostCommentDto[] = [
       {
         postId: "00000000-0000-0000-0000-000000000001",
@@ -58,6 +70,10 @@ describe("NewPostCommentConsumer", () => {
     ];
     await consumer.testOnBatch(messages);
     expect(mockProcessBatch).toHaveBeenCalledWith(messages);
+    expect(mockPublish).toHaveBeenCalledWith(
+      "event.new_post_comment",
+      messages[0],
+    );
   });
 
   test("should propagate error if batch processing fails", async () => {

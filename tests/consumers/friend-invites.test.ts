@@ -14,25 +14,37 @@ class TestableFriendInviteConsumer extends FriendInviteConsumer {
 describe("FriendInviteConsumer", () => {
   let consumer: TestableFriendInviteConsumer;
   let mockService: FriendInviteService;
+  let mockRealtimePublisher: any;
   let mockProcessBatch: ReturnType<typeof mock>;
+  let mockPublish: ReturnType<typeof mock>;
 
   beforeEach(() => {
     DependencyInjectionContainer.instance.clear();
     mockProcessBatch = mock(() => Promise.resolve());
+    mockPublish = mock(() => Promise.resolve());
 
     mockService = {
       processBatch: mockProcessBatch,
     } as unknown as FriendInviteService;
+
+    mockRealtimePublisher = {
+      publish: mockPublish,
+    };
 
     DependencyInjectionContainer.instance.add(
       ServiceTokens.FriendInviteService,
       mockService,
     );
 
+    DependencyInjectionContainer.instance.add(
+      ServiceTokens.RealtimePublisher,
+      mockRealtimePublisher,
+    );
+
     consumer = new TestableFriendInviteConsumer();
   });
 
-  test("should call service processBatch on batch", async () => {
+  test("should call service processBatch and publish on batch", async () => {
     const messages: TFriendInviteDto[] = [
       {
         senderUserId: "id1",
@@ -44,6 +56,10 @@ describe("FriendInviteConsumer", () => {
     ];
     await consumer.testOnBatch(messages);
     expect(mockProcessBatch).toHaveBeenCalledWith(messages);
+    expect(mockPublish).toHaveBeenCalledWith(
+      "event.friend_invite",
+      messages[0],
+    );
   });
 
   test("should propagate error if batch processing fails", async () => {

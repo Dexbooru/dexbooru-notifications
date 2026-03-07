@@ -7,6 +7,8 @@ enum ServiceTokens {
   FriendInviteService = "FriendInviteService",
   NewPostCommentService = "NewPostCommentService",
   NewPostLikeNotificationService = "NewPostLikeNotificationService",
+  RealtimePublisher = "RealtimePublisher",
+  RabbitMqConnection = "RabbitMqConnection",
 }
 
 export default ServiceTokens;

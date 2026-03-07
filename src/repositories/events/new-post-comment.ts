@@ -1,4 +1,6 @@
-import BaseRepository from "../../core/base-repository";
+import BaseRepository, {
+  EXCLUDED_PROJECTION,
+} from "../../core/base-repository";
 import Logger from "../../core/logger";
 import NewPostComment, {
   type TNewPostComment,
@@ -31,6 +33,7 @@ class NewPostCommentRepository extends BaseRepository<TNewPostComment> {
 
       return await this.model
         .find(filter)
+        .select(EXCLUDED_PROJECTION)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -38,6 +41,53 @@ class NewPostCommentRepository extends BaseRepository<TNewPostComment> {
     } catch (error) {
       Logger.instance.error(
         `Error in NewPostCommentRepository.findByRecipientId:`,
+        error,
+      );
+      throw error;
+    }
+  }
+  public async markAsRead(
+    recipientId: string,
+    notificationIds: string[],
+  ): Promise<number> {
+    try {
+      const result = await this.model.updateMany(
+        {
+          _id: { $in: notificationIds },
+          $or: [
+            { postAuthorId: recipientId },
+            { parentCommentAuthorId: recipientId },
+          ],
+          wasRead: false,
+        },
+        { $set: { wasRead: true } },
+      );
+      return result.modifiedCount;
+    } catch (error) {
+      Logger.instance.error(
+        `Error in NewPostCommentRepository.markAsRead:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  public async markAllAsRead(recipientId: string): Promise<number> {
+    try {
+      const result = await this.model.updateMany(
+        {
+          $or: [
+            { postAuthorId: recipientId },
+            { parentCommentAuthorId: recipientId },
+          ],
+          wasRead: false,
+        },
+        { $set: { wasRead: true } },
+      );
+      return result.modifiedCount;
+    } catch (error) {
+      Logger.instance.error(
+        `Error in NewPostCommentRepository.markAllAsRead:`,
         error,
       );
       throw error;

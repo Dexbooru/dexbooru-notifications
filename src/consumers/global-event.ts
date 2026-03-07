@@ -5,16 +5,20 @@ import type WebSocketService from "../services/websocket";
 import type EventService from "../services/events";
 import Logger from "../core/logger";
 import { z } from "zod";
+import RealtimePublisherService from "../services/realtime-publisher";
 
 const GlobalEventPayloadSchema = z.record(z.string(), z.unknown());
 
 type TGlobalEventPayload = z.infer<typeof GlobalEventPayloadSchema>;
 
 class GlobalEventConsumer extends BaseConsumer<TGlobalEventPayload> {
-  private static readonly queueName = "global_events";
+  private static readonly queueName = "websocket_data";
   private static readonly batchSize = 10;
   private static readonly visibilityTimeout = 500;
-  private static readonly routingKey = "event.#";
+  private static readonly routingKey = "#";
+  private static readonly exchanges = [
+    RealtimePublisherService.REALTIME_EXCHANGE,
+  ];
 
   private readonly webSocketService: WebSocketService;
   private readonly eventService: EventService;
@@ -26,6 +30,7 @@ class GlobalEventConsumer extends BaseConsumer<TGlobalEventPayload> {
       GlobalEventConsumer.visibilityTimeout,
       GlobalEventPayloadSchema,
       GlobalEventConsumer.routingKey,
+      GlobalEventConsumer.exchanges,
     );
 
     const container = DependencyInjectionContainer.instance;
@@ -51,6 +56,7 @@ class GlobalEventConsumer extends BaseConsumer<TGlobalEventPayload> {
       }
 
       const data = JSON.stringify(payload);
+
       channelNames.forEach((channelName) => {
         Logger.instance.info(`Broadcasting to ${channelName}: ${data}`);
         this.webSocketService.publish(channelName, data);

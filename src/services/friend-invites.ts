@@ -65,6 +65,19 @@ class FriendInviteService {
       limit,
     );
   }
+  public async markAsRead(
+    userId: string,
+    notificationIds: string[],
+  ): Promise<number> {
+    return await this.friendInviteRepository.markAsRead(
+      userId,
+      notificationIds,
+    );
+  }
+
+  public async markAllAsRead(userId: string): Promise<number> {
+    return await this.friendInviteRepository.markAllAsRead(userId);
+  }
 }
 
 export default FriendInviteService;

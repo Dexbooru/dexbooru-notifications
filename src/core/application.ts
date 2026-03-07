@@ -54,14 +54,17 @@ class Application {
     const repositoryInstances: Record<string, unknown> = {};
     const repos = repositories as ModuleExports;
 
+    const registeredTokens: string[] = [];
+
     tokenNames.forEach((token) => {
       const RepositoryClass = repos[token];
       if (typeof RepositoryClass === "function") {
         repositoryInstances[token] = new RepositoryClass();
+        registeredTokens.push(token);
       }
     });
 
-    container.addMany(tokenNames, repositoryInstances);
+    container.addMany(registeredTokens, repositoryInstances);
   }
 
   private registerServices(): void {
@@ -71,17 +74,20 @@ class Application {
     const serviceInstances: Record<string, unknown> = {};
     const servs = services as ModuleExports;
 
+    const registeredTokens: string[] = [];
+
     tokenNames.forEach((token) => {
       const ServiceClass = servs[token];
       if (typeof ServiceClass === "function") {
         serviceInstances[token] = new ServiceClass();
+        registeredTokens.push(token);
       }
     });
 
-    container.addMany(tokenNames, serviceInstances);
+    container.addMany(registeredTokens, serviceInstances);
   }
 
-  private registerConsumers(): void {
+  private registerRabbitMq(): void {
     if (!process.env.RABBITMQ_URL) {
       throw new Error("RABBITMQ_URL environment variable is not set");
     }
@@ -95,6 +101,17 @@ class Application {
     this.rabbitConnection.on("connection", () => {
       Logger.instance.info("Connection to RabbitMQ established");
     });
+
+    DependencyInjectionContainer.instance.add(
+      ServiceTokens.RabbitMqConnection,
+      this.rabbitConnection,
+    );
+  }
+
+  private registerConsumers(): void {
+    if (!this.rabbitConnection) {
+      throw new Error("RabbitMQ connection not established");
+    }
 
     const cons = consumers as Record<string, unknown>;
 
@@ -124,6 +141,7 @@ class Application {
 
   private registerDependencies(): void {
     this.registerRepositories();
+    this.registerRabbitMq();
     this.registerServices();
     this.registerConsumers();
   }

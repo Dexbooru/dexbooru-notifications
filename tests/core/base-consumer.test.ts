@@ -100,4 +100,12 @@ describe("BaseConsumer", () => {
     expect(config.queueBindings).toBeDefined();
     expect(config.queueBindings[0].routingKey).toBe("my.routing.key");
   });
+
+  test("should use custom exchanges if provided", () => {
+    const customConsumer = new TestConsumer("q", 1, 100, undefined, undefined, [
+      "custom_exchange",
+    ]);
+    const config = customConsumer.getConsumerConfig();
+    expect(config.exchanges[0].exchange).toBe("custom_exchange");
+  });
 });

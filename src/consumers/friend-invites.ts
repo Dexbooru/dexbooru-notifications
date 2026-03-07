@@ -2,6 +2,7 @@ import BaseConsumer from "../core/base-consumer";
 import DependencyInjectionContainer from "../core/dependency-injection-container";
 import ServiceTokens from "../core/tokens/services";
 import type FriendInviteService from "../services/friend-invites";
+import type RealtimePublisherService from "../services/realtime-publisher";
 import {
   type TFriendInviteDto,
   FriendInviteDtoSchema,
@@ -14,6 +15,7 @@ class FriendInviteConsumer extends BaseConsumer<TFriendInviteDto> {
   private static readonly routingKey = "event.friend_invite.*";
 
   private readonly friendInviteService: FriendInviteService;
+  private readonly realtimePublisher: RealtimePublisherService;
 
   constructor() {
     super(
@@ -24,14 +26,26 @@ class FriendInviteConsumer extends BaseConsumer<TFriendInviteDto> {
       FriendInviteConsumer.routingKey,
     );
 
-    this.friendInviteService =
-      DependencyInjectionContainer.instance.getService<FriendInviteService>(
-        ServiceTokens.FriendInviteService,
-      );
+    const container = DependencyInjectionContainer.instance;
+
+    this.friendInviteService = container.getService<FriendInviteService>(
+      ServiceTokens.FriendInviteService,
+    );
+
+    this.realtimePublisher = container.getService<RealtimePublisherService>(
+      ServiceTokens.RealtimePublisher,
+    );
   }
 
   protected async onBatch(messages: TFriendInviteDto[]): Promise<void> {
     await this.friendInviteService.processBatch(messages);
+
+    for (const message of messages) {
+      await this.realtimePublisher.publish(
+        "event.friend_invite",
+        message as unknown as Record<string, unknown>,
+      );
+    }
   }
 }
 

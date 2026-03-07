@@ -47,6 +47,19 @@ class NewPostCommentService {
       limit,
     );
   }
+  public async markAsRead(
+    userId: string,
+    notificationIds: string[],
+  ): Promise<number> {
+    return await this.newPostCommentRepository.markAsRead(
+      userId,
+      notificationIds,
+    );
+  }
+
+  public async markAllAsRead(userId: string): Promise<number> {
+    return await this.newPostCommentRepository.markAllAsRead(userId);
+  }
 }
 
 export default NewPostCommentService;

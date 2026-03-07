@@ -1,4 +1,6 @@
-import BaseRepository from "../../core/base-repository";
+import BaseRepository, {
+  EXCLUDED_PROJECTION,
+} from "../../core/base-repository";
 import Logger from "../../core/logger";
 import NewPostLikeNotification, {
   type TNewPostLikeNotification,
@@ -28,6 +30,7 @@ class NewPostLikeNotificationRepository extends BaseRepository<TNewPostLikeNotif
 
       return await this.model
         .find(filter)
+        .select(EXCLUDED_PROJECTION)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -35,6 +38,44 @@ class NewPostLikeNotificationRepository extends BaseRepository<TNewPostLikeNotif
     } catch (error) {
       Logger.instance.error(
         `Error in NewPostLikeNotificationRepository.findByRecipientId:`,
+        error,
+      );
+      throw error;
+    }
+  }
+  public async markAsRead(
+    recipientId: string,
+    notificationIds: string[],
+  ): Promise<number> {
+    try {
+      const result = await this.model.updateMany(
+        {
+          _id: { $in: notificationIds },
+          postAuthorId: recipientId,
+          wasRead: false,
+        },
+        { $set: { wasRead: true } },
+      );
+      return result.modifiedCount;
+    } catch (error) {
+      Logger.instance.error(
+        `Error in NewPostLikeNotificationRepository.markAsRead:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  public async markAllAsRead(recipientId: string): Promise<number> {
+    try {
+      const result = await this.model.updateMany(
+        { postAuthorId: recipientId, wasRead: false },
+        { $set: { wasRead: true } },
+      );
+      return result.modifiedCount;
+    } catch (error) {
+      Logger.instance.error(
+        `Error in NewPostLikeNotificationRepository.markAllAsRead:`,
         error,
       );
       throw error;

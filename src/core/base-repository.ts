@@ -2,6 +2,12 @@ import { Model, type UpdateQuery, type QueryFilter } from "mongoose";
 import type { IRepository } from "./interfaces/repository";
 import Logger from "./logger";
 
+export const EXCLUDED_PROJECTION = {
+  __v: 0,
+  createdAt: 0,
+  updatedAt: 0,
+} as const;
+
 abstract class BaseRepository<T> implements IRepository<T> {
   protected repositoryName: string;
   protected model: Model<T>;
@@ -9,6 +15,24 @@ abstract class BaseRepository<T> implements IRepository<T> {
   constructor(repositoryName: string, model: Model<T>) {
     this.repositoryName = repositoryName;
     this.model = model;
+    this.applyInternalFieldsTransform();
+  }
+
+  private applyInternalFieldsTransform(): void {
+    const schema = this.model.schema;
+    if (!schema) return;
+
+    const transform = (
+      _doc: unknown,
+      ret: Record<string, unknown>,
+    ): Record<string, unknown> => {
+      delete ret.__v;
+      delete ret.createdAt;
+      delete ret.updatedAt;
+      return ret;
+    };
+    schema.set("toJSON", { transform });
+    schema.set("toObject", { transform });
   }
 
   public async create(data: Partial<T>): Promise<T> {
@@ -38,7 +62,7 @@ abstract class BaseRepository<T> implements IRepository<T> {
 
   public async findAll(filter: QueryFilter<T> = {}): Promise<T[]> {
     try {
-      return await this.model.find(filter).exec();
+      return await this.model.find(filter).select(EXCLUDED_PROJECTION).exec();
     } catch (error) {
       Logger.instance.error(`Error in ${this.repositoryName}.findAll:`, error);
       throw error;
@@ -47,7 +71,10 @@ abstract class BaseRepository<T> implements IRepository<T> {
 
   public async findOne(filter: QueryFilter<T> = {}): Promise<T | null> {
     try {
-      return await this.model.findOne(filter).exec();
+      return await this.model
+        .findOne(filter)
+        .select(EXCLUDED_PROJECTION)
+        .exec();
     } catch (error) {
       Logger.instance.error(`Error in ${this.repositoryName}.findOne:`, error);
       throw error;
@@ -56,7 +83,7 @@ abstract class BaseRepository<T> implements IRepository<T> {
 
   public async findById(id: string): Promise<T | null> {
     try {
-      return await this.model.findById(id).exec();
+      return await this.model.findById(id).select(EXCLUDED_PROJECTION).exec();
     } catch (error) {
       Logger.instance.error(`Error in ${this.repositoryName}.findById:`, error);
       throw error;
@@ -65,7 +92,12 @@ abstract class BaseRepository<T> implements IRepository<T> {
 
   public async update(id: string, data: UpdateQuery<T>): Promise<T | null> {
     try {
-      return await this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+      return await this.model
+        .findByIdAndUpdate(id, data, {
+          new: true,
+          projection: EXCLUDED_PROJECTION,
+        })
+        .exec();
     } catch (error) {
       Logger.instance.error(`Error in ${this.repositoryName}.update:`, error);
       throw error;

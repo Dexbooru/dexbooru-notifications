@@ -2,6 +2,7 @@ import BaseConsumer from "../core/base-consumer";
 import DependencyInjectionContainer from "../core/dependency-injection-container";
 import ServiceTokens from "../core/tokens/services";
 import type NewPostLikeNotificationService from "../services/new-post-like";
+import type RealtimePublisherService from "../services/realtime-publisher";
 import {
   type TNewPostLikeNotificationDto,
   NewPostLikeNotificationDtoSchema,
@@ -14,6 +15,7 @@ class NewPostLikeNotificationConsumer extends BaseConsumer<TNewPostLikeNotificat
   private static readonly routingKey = "event.new_post_like.*";
 
   private readonly newPostLikeNotificationService: NewPostLikeNotificationService;
+  private readonly realtimePublisher: RealtimePublisherService;
 
   constructor() {
     super(
@@ -24,16 +26,34 @@ class NewPostLikeNotificationConsumer extends BaseConsumer<TNewPostLikeNotificat
       NewPostLikeNotificationConsumer.routingKey,
     );
 
+    const container = DependencyInjectionContainer.instance;
+
     this.newPostLikeNotificationService =
-      DependencyInjectionContainer.instance.getService<NewPostLikeNotificationService>(
+      container.getService<NewPostLikeNotificationService>(
         ServiceTokens.NewPostLikeNotificationService,
       );
+
+    this.realtimePublisher = container.getService<RealtimePublisherService>(
+      ServiceTokens.RealtimePublisher,
+    );
   }
 
   protected async onBatch(
     messages: TNewPostLikeNotificationDto[],
   ): Promise<void> {
     await this.newPostLikeNotificationService.processBatch(messages);
+
+    for (const message of messages) {
+      const payload = {
+        ...message,
+        totalLikes: message.totalLikes.toString(),
+      };
+
+      await this.realtimePublisher.publish(
+        "event.new_post_like",
+        payload as unknown as Record<string, unknown>,
+      );
+    }
   }
 }
 

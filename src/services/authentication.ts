@@ -2,7 +2,7 @@ import DependencyInjectionContainer from "../core/dependency-injection-container
 import RepositoryTokens from "../core/tokens/repositories";
 import type { UserSessionRepository } from "../repositories";
 import type { TUserSession } from "../models/authentication/session";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
 import { Types } from "mongoose";
 
@@ -11,12 +11,14 @@ type TJwtPayload = jwt.JwtPayload & {
 };
 
 class AuthenticationService {
-  public static readonly DEXBOORU_WEBAPP_COOKIE_KEY = "token";
+  public static readonly DEXBOORU_WEBAPP_COOKIE_KEY = "dexbooru-session";
   public static readonly DEXBOORU_NOTIFICATIONS_COOKIE_KEY =
     "dexbooru-notifications-session";
 
-  private static readonly SESSION_ID_SIZE = 32;
-  private static readonly SESSION_EXPIRATION_DAYS = 7;
+  public static readonly SESSION_ID_SIZE = 32;
+  public static readonly SESSION_EXPIRATION_DAYS = 7;
+  public static readonly SESSION_COOKIE_MAX_AGE =
+    AuthenticationService.SESSION_EXPIRATION_DAYS * 24 * 60;
 
   private readonly userSessionRepository: UserSessionRepository;
 
@@ -27,7 +29,27 @@ class AuthenticationService {
       );
   }
 
-  private verifyAndDecodeJwt(token: string): TJwtPayload {
+  private buildSessionCookieData(token: string): string {
+    const name = AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY;
+    const maxAge = AuthenticationService.SESSION_COOKIE_MAX_AGE;
+    const isProd = process.env.NODE_ENV === "production";
+
+    const cookieParts = [
+      `${name}=${token}`,
+      `Max-Age=${maxAge}`,
+      `Path=/`,
+      `HttpOnly`,
+      `SameSite=Lax`,
+    ];
+
+    if (isProd) {
+      cookieParts.push("Secure");
+    }
+
+    return cookieParts.join("; ");
+  }
+
+  private verifyAndDecodeJwt(token: string): JwtPayload | null {
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined in environment variables");
     }
@@ -40,7 +62,7 @@ class AuthenticationService {
 
       return decoded as TJwtPayload;
     } catch (error) {
-      throw new Error(`Invalid jwt token for the following reason: ${error}`);
+      return null;
     }
   }
 
@@ -67,7 +89,12 @@ class AuthenticationService {
       expiresAt,
     });
 
-    return newUserSession;
+    const cookieContent = this.buildSessionCookieData(newUserSession.token);
+
+    return {
+      session: newUserSession,
+      cookie: cookieContent,
+    };
   }
 
   public async validateSession(token: string): Promise<TUserSession | null> {
@@ -83,6 +110,29 @@ class AuthenticationService {
     }
 
     return session;
+  }
+
+  public async invalidateSession(token: string): Promise<boolean> {
+    return this.userSessionRepository.deleteByToken(token);
+  }
+
+  public buildClearSessionCookie(): string {
+    const name = AuthenticationService.DEXBOORU_NOTIFICATIONS_COOKIE_KEY;
+    const isProd = process.env.NODE_ENV === "production";
+
+    const cookieParts = [
+      `${name}=`,
+      `Max-Age=0`,
+      `Path=/`,
+      `HttpOnly`,
+      `SameSite=Lax`,
+    ];
+
+    if (isProd) {
+      cookieParts.push("Secure");
+    }
+
+    return cookieParts.join("; ");
   }
 }
 

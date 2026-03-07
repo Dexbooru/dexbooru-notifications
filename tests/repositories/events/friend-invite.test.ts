@@ -6,7 +6,8 @@ const mockExec = mock();
 const mockLimit = mock(() => ({ exec: mockExec }));
 const mockSkip = mock(() => ({ limit: mockLimit }));
 const mockSort = mock(() => ({ skip: mockSkip }));
-const mockFind = mock(() => ({ sort: mockSort }));
+const mockSelect = mock(() => ({ sort: mockSort }));
+const mockFind = mock(() => ({ select: mockSelect }));
 
 const mockModel = {
   find: mockFind,
@@ -30,6 +31,7 @@ mock.module("../../../src/models/events/friend-invite", () => {
 describe("FriendInviteRepository", () => {
   beforeEach(() => {
     mockFind.mockClear();
+    mockSelect.mockClear();
     mockSort.mockClear();
     mockSkip.mockClear();
     mockLimit.mockClear();
@@ -66,7 +68,7 @@ describe("FriendInviteRepository", () => {
     });
 
     // Check sort
-    expect(mockSort).toHaveBeenCalledWith({ createdAt: -1 });
+    expect(mockSort).toHaveBeenCalledWith({ requestSentAt: -1 });
 
     // Check skip (page 2, limit 10 -> skip 10)
     expect(mockSkip).toHaveBeenCalledWith(10);

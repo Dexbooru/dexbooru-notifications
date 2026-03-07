@@ -1,0 +1,20 @@
+meta {
+  name: exhange Dexbooru JWT for notification session
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/api/auth
+  body: none
+  auth: inherit
+}
+
+headers {
+  Cookie: dexbooru-session=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhhZWMyMjc1LTQ2ZDUtNDI0OC1iNjAzLTkyOTgyODk1OGY1NCIsImlhdCI6MTc3MDUyNjMyMSwiZXhwIjoxNzcxMTMxMTIxfQ.HtJ04-ko7QYX9N9I_yAYOiB5BTh_Rik5eRd81_MT4YU
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

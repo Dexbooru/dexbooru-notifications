@@ -35,7 +35,6 @@ class EventService {
   public resolveRecipientChannels(payload: Record<string, unknown>): string[] {
     const recipientIds = new Set<string>();
 
-    // Handle specific routing for new post comments and likes
     if (typeof payload.postAuthorId === "string") {
       recipientIds.add(payload.postAuthorId);
     }
@@ -47,7 +46,6 @@ class EventService {
       return Array.from(recipientIds).map((id) => this.getChannelName(id));
     }
 
-    // Fallback to generic channel key logic if no specific recipients found
     const fallbackChannel = this.computeChannelKey(payload);
     if (fallbackChannel) {
       return [fallbackChannel];
@@ -57,10 +55,8 @@ class EventService {
   }
 
   public computeChannelKey(payload: unknown): string | null {
-    // Basic heuristics to find target user ID
     if (typeof payload === "object" && payload !== null) {
       const p = payload as Record<string, unknown>;
-      // Check common fields for target user
       if (typeof p.userId === "string") return this.getChannelName(p.userId);
       if (typeof p.receiverUserId === "string")
         return this.getChannelName(p.receiverUserId);

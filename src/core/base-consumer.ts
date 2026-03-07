@@ -14,8 +14,8 @@ abstract class BaseConsumer<T = unknown> implements IConsumer {
   public maxWaitTime: number;
   public routingKey?: string;
   protected schema?: ZodSchema<T>;
+  protected exchanges: string[];
 
-  public static readonly BASE_EXCHANGES = ["notification_events"];
   public static readonly DEFAULT_MESSAGES_PER_BATCH = 10;
   public static readonly DEFAULT_MAX_WAIT_TIME = 5000;
 
@@ -33,6 +33,7 @@ abstract class BaseConsumer<T = unknown> implements IConsumer {
     maxWaitTime?: number,
     schema?: ZodSchema<T>,
     routingKey?: string,
+    exchanges?: string[],
   ) {
     this.queueName = queueName ?? "";
     this.messagesPerBatch =
@@ -40,6 +41,7 @@ abstract class BaseConsumer<T = unknown> implements IConsumer {
     this.maxWaitTime = maxWaitTime ?? BaseConsumer.DEFAULT_MAX_WAIT_TIME;
     this.schema = schema;
     this.routingKey = routingKey;
+    this.exchanges = exchanges ?? ["notification_events"];
   }
 
   private buildConsumerConfig(): ConsumerProps {
@@ -47,7 +49,7 @@ abstract class BaseConsumer<T = unknown> implements IConsumer {
       queue: this.queueName,
       queueOptions: { durable: true },
       qos: { prefetchCount: this.messagesPerBatch },
-      exchanges: BaseConsumer.BASE_EXCHANGES.map((exchange) => ({
+      exchanges: this.exchanges.map((exchange) => ({
         exchange,
         durable: true,
         type: "topic",
@@ -55,7 +57,8 @@ abstract class BaseConsumer<T = unknown> implements IConsumer {
     };
 
     if (this.routingKey) {
-      config.queueBindings = BaseConsumer.BASE_EXCHANGES.map((exchange) => ({
+      config.queueBindings = this.exchanges.map((exchange) => ({
+        queue: this.queueName,
         exchange,
         routingKey: this.routingKey!,
       }));

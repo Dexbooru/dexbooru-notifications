@@ -1,4 +1,6 @@
-import BaseRepository from "../../core/base-repository";
+import BaseRepository, {
+  EXCLUDED_PROJECTION,
+} from "../../core/base-repository";
 import Logger from "../../core/logger";
 import FriendInvite, {
   type TFriendInvite,
@@ -28,13 +30,52 @@ class FriendInviteRepository extends BaseRepository<TFriendInvite> {
 
       return await this.model
         .find(filter)
-        .sort({ createdAt: -1 })
+        .select(EXCLUDED_PROJECTION)
+        .sort({ requestSentAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec();
     } catch (error) {
       Logger.instance.error(
         `Error in FriendInviteRepository.findByReceiverId:`,
+        error,
+      );
+      throw error;
+    }
+  }
+  public async markAsRead(
+    receiverId: string,
+    notificationIds: string[],
+  ): Promise<number> {
+    try {
+      const result = await this.model.updateMany(
+        {
+          _id: { $in: notificationIds },
+          receiverUserId: receiverId,
+          wasRead: false,
+        },
+        { $set: { wasRead: true } },
+      );
+      return result.modifiedCount;
+    } catch (error) {
+      Logger.instance.error(
+        `Error in FriendInviteRepository.markAsRead:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  public async markAllAsRead(receiverId: string): Promise<number> {
+    try {
+      const result = await this.model.updateMany(
+        { receiverUserId: receiverId, wasRead: false },
+        { $set: { wasRead: true } },
+      );
+      return result.modifiedCount;
+    } catch (error) {
+      Logger.instance.error(
+        `Error in FriendInviteRepository.markAllAsRead:`,
         error,
       );
       throw error;
