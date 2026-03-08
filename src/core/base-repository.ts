@@ -4,7 +4,6 @@ import Logger from "./logger";
 
 export const EXCLUDED_PROJECTION = {
   __v: 0,
-  createdAt: 0,
   updatedAt: 0,
 } as const;
 
@@ -27,7 +26,6 @@ abstract class BaseRepository<T> implements IRepository<T> {
       ret: Record<string, unknown>,
     ): Record<string, unknown> => {
       delete ret.__v;
-      delete ret.createdAt;
       delete ret.updatedAt;
       return ret;
     };
