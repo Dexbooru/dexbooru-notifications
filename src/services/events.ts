@@ -34,6 +34,7 @@ class EventService {
 
   public resolveRecipientChannels(payload: Record<string, unknown>): string[] {
     const recipientIds = new Set<string>();
+    const actorIds = new Set<string>();
 
     if (typeof payload.postAuthorId === "string") {
       recipientIds.add(payload.postAuthorId);
@@ -41,9 +42,20 @@ class EventService {
     if (typeof payload.parentCommentAuthorId === "string") {
       recipientIds.add(payload.parentCommentAuthorId);
     }
+    if (typeof payload.commentAuthorId === "string") {
+      actorIds.add(payload.commentAuthorId);
+    }
+    if (typeof payload.likerUserId === "string") {
+      actorIds.add(payload.likerUserId);
+    }
+    if (typeof payload.senderUserId === "string") {
+      actorIds.add(payload.senderUserId);
+    }
 
     if (recipientIds.size > 0) {
-      return Array.from(recipientIds).map((id) => this.getChannelName(id));
+      return Array.from(recipientIds)
+        .filter((id) => !actorIds.has(id))
+        .map((id) => this.getChannelName(id));
     }
 
     const fallbackChannel = this.computeChannelKey(payload);

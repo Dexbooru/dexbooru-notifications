@@ -59,6 +59,43 @@ describe("EventService", () => {
     expect(channels.length).toBe(2);
   });
 
+  test("resolveRecipientChannels should not notify actor for own post comment", () => {
+    const eventService = new EventService();
+    const payload = {
+      postAuthorId: "author-1",
+      commentAuthorId: "author-1",
+    };
+
+    const channels = eventService.resolveRecipientChannels(payload);
+
+    expect(channels).toEqual([]);
+  });
+
+  test("resolveRecipientChannels should still notify parent author when actor comments own post", () => {
+    const eventService = new EventService();
+    const payload = {
+      postAuthorId: "author-1",
+      parentCommentAuthorId: "parent-author-1",
+      commentAuthorId: "author-1",
+    };
+
+    const channels = eventService.resolveRecipientChannels(payload);
+
+    expect(channels).toEqual(["events-parent-author-1"]);
+  });
+
+  test("resolveRecipientChannels should not notify actor for own post like", () => {
+    const eventService = new EventService();
+    const payload = {
+      postAuthorId: "author-1",
+      likerUserId: "author-1",
+    };
+
+    const channels = eventService.resolveRecipientChannels(payload);
+
+    expect(channels).toEqual([]);
+  });
+
   test("resolveRecipientChannels should fallback to computeChannelKey fields", () => {
     const eventService = new EventService();
     const payload = {
