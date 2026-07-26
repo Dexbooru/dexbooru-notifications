@@ -47,7 +47,8 @@ describe("NewPostCommentService", () => {
     mockInsertMany.mockClear();
     mockFindByRecipientId.mockClear();
     mockWarn.mockClear();
-    mockDtoToModel.mockClear();
+    mockDtoToModel.mockReset();
+    mockDtoToModel.mockImplementation((dto: any) => dto);
 
     DependencyInjectionContainer.instance.clear();
     DependencyInjectionContainer.instance.add(
@@ -64,19 +65,19 @@ describe("NewPostCommentService", () => {
   test("should process batch using insertMany", async () => {
     const payload: TNewPostCommentDto[] = [
       {
-        postId: "00000000-0000-0000-0000-000000000001",
-        postAuthorId: "00000000-0000-0000-0000-000000000002",
-        commentAuthorId: "00000000-0000-0000-0000-000000000003",
-        commentContent: "Nice post!",
+        commentId: "00000000-0000-4000-8000-000000000011",
+        postId: "00000000-0000-4000-8000-000000000001",
+        postAuthorId: "00000000-0000-4000-8000-000000000002",
+        commentAuthorId: "00000000-0000-4000-8000-000000000003",
         wasRead: false,
       },
       {
-        postId: "00000000-0000-0000-0000-000000000004",
-        postAuthorId: "00000000-0000-0000-0000-000000000005",
-        commentAuthorId: "00000000-0000-0000-0000-000000000006",
-        commentContent: "Thanks!",
-        parentCommentId: "00000000-0000-0000-0000-000000000001",
-        parentCommentAuthorId: "00000000-0000-0000-0000-000000000003",
+        commentId: "00000000-0000-4000-8000-000000000012",
+        postId: "00000000-0000-4000-8000-000000000004",
+        postAuthorId: "00000000-0000-4000-8000-000000000005",
+        commentAuthorId: "00000000-0000-4000-8000-000000000006",
+        parentCommentId: "00000000-0000-4000-8000-000000000001",
+        parentCommentAuthorId: "00000000-0000-4000-8000-000000000003",
         wasRead: false,
       },
     ];
@@ -98,10 +99,10 @@ describe("NewPostCommentService", () => {
   test("should warn when valid comments are less than total messages", async () => {
     const payload: TNewPostCommentDto[] = [
       {
-        postId: "1", // Invalid, but our mockDtoToModel might pass it unless we simulate filtering
+        commentId: "1",
+        postId: "1",
         postAuthorId: "2",
         commentAuthorId: "3",
-        commentContent: "test",
         wasRead: false,
       } as any,
     ];

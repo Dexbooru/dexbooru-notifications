@@ -61,10 +61,10 @@ describe("NewPostCommentConsumer", () => {
   test("should call service processBatch and publish on batch", async () => {
     const messages: TNewPostCommentDto[] = [
       {
-        postId: "00000000-0000-0000-0000-000000000001",
-        postAuthorId: "00000000-0000-0000-0000-000000000002",
-        commentAuthorId: "00000000-0000-0000-0000-000000000003",
-        commentContent: "Nice post!",
+        commentId: "00000000-0000-4000-8000-000000000011",
+        postId: "00000000-0000-4000-8000-000000000001",
+        postAuthorId: "00000000-0000-4000-8000-000000000002",
+        commentAuthorId: "00000000-0000-4000-8000-000000000003",
         wasRead: false,
       },
     ];
@@ -81,10 +81,10 @@ describe("NewPostCommentConsumer", () => {
     mockProcessBatch.mockRejectedValue(error);
     const messages: TNewPostCommentDto[] = [
       {
-        postId: "00000000-0000-0000-0000-000000000001",
-        postAuthorId: "00000000-0000-0000-0000-000000000002",
-        commentAuthorId: "00000000-0000-0000-0000-000000000003",
-        commentContent: "Nice post!",
+        commentId: "00000000-0000-4000-8000-000000000011",
+        postId: "00000000-0000-4000-8000-000000000001",
+        postAuthorId: "00000000-0000-4000-8000-000000000002",
+        commentAuthorId: "00000000-0000-4000-8000-000000000003",
         wasRead: false,
       },
     ];
